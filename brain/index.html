@@ -858,6 +858,39 @@
   const deckTourSkip = document.getElementById('deck-tour-skip');
   const deckTourCard = document.getElementById('deck-tour-card');
 
+  function deckSiteRoot() {
+    var p = location.pathname || '/';
+    var brainIdx = p.indexOf('/brain');
+    if (brainIdx >= 0) return p.slice(0, brainIdx + 1);
+    return p.endsWith('/') ? p : p.slice(0, p.lastIndexOf('/') + 1);
+  }
+
+  function deckAssetUrl(rel) {
+    return deckSiteRoot() + String(rel || '').replace(/^\.\.\//, '');
+  }
+
+  function ensureBriefForLabel(label) {
+    if (deckBriefs[label]) return deckBriefs[label];
+    var node = nodeByLabel(label);
+    if (!node) return null;
+    var fallback = {
+      href: '../docs/02-architecture/00-system-overview.md',
+      dir: 'docs/',
+      category: node.type || 'Module',
+      pages: 0,
+      related: [],
+      body: node.desc || 'Module overview for ' + label + '.',
+    };
+    deckBriefs[label] = fallback;
+    return fallback;
+  }
+
+  function presentNodeCard(n) {
+    card.querySelector('b').textContent = n.label;
+    card.querySelector('span').textContent = n.desc || '';
+    showCard(true);
+  }
+
   function labelToSlug(label) {
     return (label || '').toLowerCase().replace(/\./g, '-').replace(/\s+/g, '-');
   }
@@ -1008,7 +1041,7 @@
   }
 
   function fillBriefPanel(label, titleEl, bodyEl) {
-    const b = deckBriefs[label];
+    const b = ensureBriefForLabel(label);
     if (!b) return false;
     titleEl.textContent = label;
     bodyEl.innerHTML = applyGlossary(b.body || '');
@@ -1067,7 +1100,7 @@
   }
 
   function openDeckBrief(label, secondLabel) {
-    const b = deckBriefs[label];
+    const b = ensureBriefForLabel(label);
     if (!b) return;
     currentBriefLabel = label;
     compareLabel = secondLabel || '';
@@ -1129,15 +1162,17 @@
   }
 
   function handleNodeClick(n, shiftKey) {
-    if (!n || !n.core || n.isRoot) return;
+    if (!n || !n.core) return;
     const now = performance.now();
-    if (now - lastNodeClickAt < 520) return;
+    if (now - lastNodeClickAt < 220) return;
     lastNodeClickAt = now;
-    if (!shiftKey && briefOpen && currentBriefLabel === n.label) return;
+    if (!shiftKey && briefOpen && currentBriefLabel === n.label) {
+      closeDeckBrief();
+      return;
+    }
     if (window.siemDeckExt && window.siemDeckExt.handleClick(n, shiftKey)) return;
     if (!canAccessLabel(n.label)) {
-      showCard(true);
-      card.querySelector('b').textContent = n.label;
+      presentNodeCard(n);
       card.querySelector('span').textContent = 'Outside your role lens — switch to Tier 2 or Manager to open this brief.';
       frameNode(n);
       return;
@@ -1146,8 +1181,8 @@
       if (!comparePick) {
         comparePick = n;
         frameNode(n);
-        showCard(true);
-        card.querySelector('b').textContent = n.label + ' — pick second module (Shift+click)';
+        presentNodeCard(n);
+        card.querySelector('span').textContent = n.desc + ' — pick second module (Shift+click)';
         return;
       }
       if (comparePick.label === n.label) return;
@@ -1159,14 +1194,14 @@
     comparePick = null;
     spawnClickPop(n.x, n.y, n.color, n.label);
     pulseCardPop();
-    showCard(true);
+    presentNodeCard(n);
     frameNode(n);
-    if (deckBriefs[n.label]) openDeckBrief(n.label);
+    openDeckBrief(n.label);
   }
 
   Promise.all([
-    fetch('../assets/deck-briefs.json').then((r) => r.json()).catch(() => ({})),
-    fetch('../assets/doc-index.json').then((r) => r.json()).catch(() => null),
+    fetch(deckAssetUrl('assets/deck-briefs.json')).then((r) => r.json()).catch(() => ({})),
+    fetch(deckAssetUrl('assets/doc-index.json')).then((r) => r.json()).catch(() => null),
   ]).then(([briefs, idx]) => {
     deckBriefs = briefs || {};
     docIndex = idx;
@@ -2105,9 +2140,8 @@
   bgC.addEventListener('click', () => recenterWormhole());
   canvas.addEventListener('click', (e) => {
     const now = performance.now();
-    if (now < suppressCanvasClickUntil || now - lastCanvasClickAt < 480) return;
+    if (now < suppressCanvasClickUntil || now - lastCanvasClickAt < 320) return;
     lastCanvasClickAt = now;
-    lastNodeClickAt = now;
     mx = e.clientX;
     my = e.clientY;
     if (hover) {
@@ -2883,12 +2917,6 @@
   <script src="../assets/deck-features-v2.js?v=15.0.1-evidence-tab"></script>
   <script>SiemCore.bootPage('brain'); SiemCore.AchievementSystem.check('visit_brain');
   (function () {
-    function deckSiteRoot() {
-      var p = location.pathname || '/';
-      var brainIdx = p.indexOf('/brain');
-      if (brainIdx >= 0) return p.slice(0, brainIdx + 1);
-      return p.endsWith('/') ? p : p.slice(0, p.lastIndexOf('/') + 1);
-    }
     function wireExperienceLinks() {
       var root = deckSiteRoot();
       document.querySelectorAll('.deck-exp-tile[href], .deck-exp-hub-link[href]').forEach(function (a) {
