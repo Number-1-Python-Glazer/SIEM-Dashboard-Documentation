@@ -475,7 +475,7 @@
       #deck-brief-title { color: #111 !important; }
     }
     #deck-experience-orbit {
-      position: fixed; left: 50%; top: 54%; z-index: 12;
+      position: fixed; left: 50%; top: 50%; z-index: 35;
       width: 0; height: 0; pointer-events: none;
     }
     .deck-exp-tile {
@@ -487,8 +487,9 @@
       border-radius: 6px; text-decoration: none; color: #e9d5ff;
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 0 18px rgba(167, 139, 250, 0.15);
-      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
       animation: deck-exp-orbit 120s linear infinite;
+      will-change: transform;
     }
     .deck-exp-tile:hover {
       border-color: rgba(254, 249, 195, 0.55);
@@ -518,8 +519,8 @@
     .deck-exp-tile:nth-child(12) { animation-delay: -101.5s; }
     .deck-exp-tile:nth-child(13) { animation-delay: -110.8s; }
     @keyframes deck-exp-orbit {
-      from { transform: rotate(0deg) translateX(min(340px, 42vw)) rotate(0deg); }
-      to { transform: rotate(360deg) translateX(min(340px, 42vw)) rotate(-360deg); }
+      from { transform: rotate(0deg) translateX(min(560px, 52vw)) rotate(0deg); }
+      to { transform: rotate(360deg) translateX(min(560px, 52vw)) rotate(-360deg); }
     }
     @media (max-width: 900px) {
       #deck-experience-orbit { display: none; }
@@ -2882,6 +2883,23 @@
   <script src="../assets/deck-features-v2.js?v=15.0.1-evidence-tab"></script>
   <script>SiemCore.bootPage('brain'); SiemCore.AchievementSystem.check('visit_brain');
   (function () {
+    function deckSiteRoot() {
+      var p = location.pathname || '/';
+      var brainIdx = p.indexOf('/brain');
+      if (brainIdx >= 0) return p.slice(0, brainIdx + 1);
+      return p.endsWith('/') ? p : p.slice(0, p.lastIndexOf('/') + 1);
+    }
+    function wireExperienceLinks() {
+      var root = deckSiteRoot();
+      document.querySelectorAll('.deck-exp-tile[href], .deck-exp-hub-link[href]').forEach(function (a) {
+        var file = a.getAttribute('href').replace(/^\.\.\//, '');
+        a.href = root + file;
+        a.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      });
+    }
+    wireExperienceLinks();
     var hub = document.getElementById('deck-experience-hub');
     var btn = document.getElementById('deck-experience-hub-toggle');
     if (!hub || !btn) return;
