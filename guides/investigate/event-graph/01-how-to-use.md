@@ -1,4 +1,4 @@
-# Event Graph
+# Event graph
 
 **Sidebar:** Investigate → Event Graph
 

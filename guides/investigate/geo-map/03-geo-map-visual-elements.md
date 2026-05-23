@@ -6,7 +6,7 @@ subsection: What the Geo Map shows
 last_updated: 2026-05-23
 ---
 
-# What the Geo Map shows
+# What the geo map shows
 
 **Sidebar path:** Investigate → Geo Map
 

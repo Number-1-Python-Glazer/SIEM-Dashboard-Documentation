@@ -1,5 +1,7 @@
 # Auth context
 
+`AuthContext`: login state, CSRF token, and role used for client-side permission checks.
+
 This page documents **auth context** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

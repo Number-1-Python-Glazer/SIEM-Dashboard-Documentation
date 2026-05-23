@@ -1,4 +1,4 @@
-# Vulnerability Intel; Documentation Index
+# Vulnerability intel; documentation index
 
 **Sidebar path:** Intelligence → Vuln Intel
 

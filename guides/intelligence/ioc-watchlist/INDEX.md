@@ -1,4 +1,4 @@
-# IOC Watchlist; Documentation Index
+# IOC watchlist; documentation index
 
 **Sidebar path:** Intelligence → IOC Watchlist
 

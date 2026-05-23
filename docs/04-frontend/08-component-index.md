@@ -1,5 +1,7 @@
 # UI module index
 
+Index linking each UI module doc to its React source file under `src/components/`.
+
 This page documents **ui module index** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

@@ -1,5 +1,7 @@
 # React entry
 
+`main.jsx` mounts the tree; `App.jsx` wraps providers and the router.
+
 This page documents **react entry** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

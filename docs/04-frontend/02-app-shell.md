@@ -1,5 +1,7 @@
 # App shell
 
+Sidebar layout, module chrome, and header controls shared across views.
+
 This page documents **app shell** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

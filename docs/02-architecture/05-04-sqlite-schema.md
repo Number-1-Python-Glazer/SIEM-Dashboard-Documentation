@@ -1,5 +1,7 @@
 # SQLite schema
 
+Tables in `data/siem.db`: users, alerts, audit log, watchlist, threat API keys.
+
 This page documents **alerts incidents and audit tables** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

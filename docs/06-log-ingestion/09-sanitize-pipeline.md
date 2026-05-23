@@ -1,5 +1,7 @@
 # Sanitize pipeline
 
+Pre-detection sanitization: strip null bytes, cap field length, reject malformed timestamps.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **sanitize** path handles Pre-detection scrubbing of dangerous payloads and oversized lines.
 
 ## Why this format matters

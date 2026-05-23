@@ -1,4 +1,4 @@
-# Threat Hunt
+# Threat hunt
 
 **Sidebar:** Investigate → Threat Hunt
 

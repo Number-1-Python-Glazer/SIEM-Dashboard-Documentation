@@ -1,5 +1,7 @@
 # Mock log generator
 
+`mockLogGenerator.js`: synthetic ECS events for simulate-campaign demos, including malicious variants.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **mock** path handles Built-in sample bursts for classrooms without external log files.
 
 ## Why this format matters

@@ -6,7 +6,7 @@ subsection: What an Indicator of Compromise is
 last_updated: 2026-05-23
 ---
 
-# What an Indicator of Compromise is
+# What an indicator of compromise is
 
 **Part of:** Intelligence → IOC Watchlist
 **One-sentence focus:** Organisation-specific indicators matched against incoming alerts in real time.

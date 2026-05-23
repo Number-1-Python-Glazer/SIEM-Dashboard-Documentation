@@ -1,4 +1,4 @@
-# Network Map
+# Network map
 
 **Sidebar:** Investigate → Network Map
 

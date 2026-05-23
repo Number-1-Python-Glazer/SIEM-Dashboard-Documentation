@@ -1,4 +1,4 @@
-# Risk Scoring; Documentation Index
+# Risk scoring; documentation index
 
 **Sidebar path:** Intelligence → Risk Scoring
 

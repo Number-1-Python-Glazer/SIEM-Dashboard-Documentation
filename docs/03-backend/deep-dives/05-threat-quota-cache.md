@@ -1,5 +1,7 @@
 # Threat quota cache
 
+In-memory cache of AbuseIPDB daily quota so repeated lookups do not burn the API allowance.
+
 This page documents **threat quota cache** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

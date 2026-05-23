@@ -61,7 +61,7 @@ Empty lines are filtered before parse. Blank lines do not count toward totals. M
 
 > **Technical note:** `setLogsProcessed((n) => n + geoEnrichedLogs.length)` uses post-validation event count. If validation rejects items, only sanitized survivors increment the counter.
 
-### Preview cap,Log Ingestion screen:
+### Preview cap,Log ingestion screen:
 
 ```javascript
 {preview.events.slice(0, 200).map((e, i) => (...))}
@@ -69,7 +69,7 @@ Empty lines are filtered before parse. Blank lines do not count toward totals. M
 ```
 Parsing itself has no line limit client-side; `parseLogText()` processes every non-empty line in the textarea or uploaded file. Memory bounds are practical (browser tab limits) rather than enforced.
 
-### Raw log ring buffer :the SIEM context pipeline:
+### Raw log ring buffer:the SIEM context pipeline:
 
 ```javascript
 const MAX_RAW_LOGS = 500;
@@ -82,7 +82,7 @@ Each ingest appends geo-enriched events then slices the tail. FIFO eviction of o
 
 Default `maxEvents = 5000` per validate request. Additional events in the POST body are silently truncated (`rejected` count includes overflow).
 
-### Rate limiting :`ingestLimiter`:
+### Rate limiting:`ingestLimiter`:
 
 30 validate requests per minute. Effectively throttling sustained bulk upload automation.
 

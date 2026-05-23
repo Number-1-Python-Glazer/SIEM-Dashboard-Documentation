@@ -1,4 +1,4 @@
-# Case Manager; Documentation Index
+# Case Manager; documentation index
 
 **Sidebar path:** Respond → Cases
 

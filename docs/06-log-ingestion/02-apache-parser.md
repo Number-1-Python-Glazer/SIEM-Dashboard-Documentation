@@ -1,5 +1,7 @@
 # Apache and nginx access log parser
 
+Parses Apache combined log lines into normalized ECS-style events (`src/services/parsers/apache.js`).
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **apache** path handles Combined log format lines with IP, timestamp, method, path, status, and user agent.
 
 ## Why this format matters

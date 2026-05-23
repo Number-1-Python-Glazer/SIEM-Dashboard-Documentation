@@ -1,5 +1,7 @@
 # Alert dedupe logic
 
+How `DetectionEngine` suppresses repeat alerts for the same rule and source within a cooldown window.
+
 This page documents **alert dedupe logic** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

@@ -1,5 +1,7 @@
 # Syslog parser
 
+Parses RFC5424-style syslog into normalized events (`src/services/parsers/syslog.js`).
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **syslog** path handles RFC 3164 and 5424 lines from Linux daemons, SSH, and firewall messages.
 
 ## Why this format matters

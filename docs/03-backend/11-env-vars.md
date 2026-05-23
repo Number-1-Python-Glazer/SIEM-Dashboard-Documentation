@@ -1,5 +1,7 @@
 # ENV vars
 
+Environment variables: `SESSION_SECRET`, `CORS_ORIGIN`, threat keys, geo DB path, and production flags.
+
 This page documents **env vars** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

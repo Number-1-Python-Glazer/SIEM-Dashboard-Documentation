@@ -1,5 +1,7 @@
 # Simulated campaigns
 
+Dashboard **Simulate Campaign** button: batches malicious mock logs through the full detection pipeline.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **campaign** path handles One-click multi-rule scenario injection from Overview.
 
 ## Why this format matters

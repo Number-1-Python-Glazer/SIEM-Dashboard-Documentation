@@ -58,4 +58,3 @@ Mid-incident JSON export before **CLEAR ALL** admin action preserves point-in-ti
 ### Edge cases and gotchas
 
 CSV formula injection mitigated via `csvEscape` on export; still open in Excel safely. Large exports include full alert history not window filter; post-process by time.
-

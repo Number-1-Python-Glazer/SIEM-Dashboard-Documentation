@@ -1,4 +1,4 @@
-# Vulnerability Intel
+# Vulnerability intel
 
 **Sidebar:** Intelligence → Vuln Intel
 

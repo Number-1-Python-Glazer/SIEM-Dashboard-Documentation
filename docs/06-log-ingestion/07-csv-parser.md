@@ -1,5 +1,7 @@
 # CSV parser
 
+Reads CSV with a header row; maps columns to timestamp, source IP, message, and severity.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **csv** path handles Comma-separated exports with header row.
 
 ## Why this format matters

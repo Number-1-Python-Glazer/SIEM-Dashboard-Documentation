@@ -1,5 +1,7 @@
 # Geo enrichment
 
+Client calls `/api/geo/:ip` during `processLogs()` to attach country and coordinates.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **geo** path handles Offline MaxMind lookup during ingest.
 
 ## Why this format matters

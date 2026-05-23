@@ -80,7 +80,7 @@ Capture group mapping in `parseApacheLine()`:
 ```
 %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:timestamp}\] "%{WORD:verb} %{URIPATHPARAM:request} HTTP/%{NUMBER:httpversion}" %{NUMBER:response} (?:%{NUMBER:bytes}|-) (?:"(?:%{URI:referrer}|-)")? (?:"(?:%{GREEDYDATA:agent}|-)")?
 ```
-### CEF format :`CEF_RE`:
+### CEF format:`CEF_RE`:
 
 ```javascript
 const CEF_RE = /^CEF:(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)/;

@@ -28,7 +28,7 @@ Attackers do not respect network diagrams. They exploit the forgotten dev server
 
 ### Step-by-step walkthrough
 
-1. Sign in and navigate to Infrastructure → Asset Inventory in the sidebar (global header routes to `AssetInventory`).
+1. Sign in and open Infrastructure → Asset Inventory in the sidebar (global header routes to `AssetInventory`).
 2. Read the four header counters to establish posture: note **AT RISK** and CRITICAL CVEs before drilling into rows.
 3. If the table shows zero **AT RISK** assets, run Simulate Campaign on Monitor → Overview or ingest logs via Ingest → Log Ingestion to generate alert-to-asset correlations.
 4. Click **CRITICAL** filter to show only assets with `criticality >= 9`; domain controllers, VPN gateway, SIEM host, and database servers in the demo data.

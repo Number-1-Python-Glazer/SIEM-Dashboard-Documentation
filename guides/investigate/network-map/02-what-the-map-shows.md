@@ -6,7 +6,7 @@ subsection: What is being shown on the Network Map
 last_updated: 2026-05-23
 ---
 
-# What is being shown on the Network Map
+# What is being shown on the network map
 
 **Sidebar path:** Investigate → Network Map
 

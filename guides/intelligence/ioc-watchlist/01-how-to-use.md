@@ -1,4 +1,4 @@
-# IOC Watchlist
+# IOC watchlist
 
 **Sidebar:** Intelligence → IOC Watchlist
 

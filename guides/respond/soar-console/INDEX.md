@@ -1,4 +1,4 @@
-# SOAR Console; Documentation Index
+# SOAR console; documentation index
 
 **Sidebar path:** Respond → SOAR
 

@@ -1,5 +1,7 @@
 # API client
 
+Fetch wrapper: sends session cookies, attaches CSRF header on POST/PUT/DELETE.
+
 This page documents **api client** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

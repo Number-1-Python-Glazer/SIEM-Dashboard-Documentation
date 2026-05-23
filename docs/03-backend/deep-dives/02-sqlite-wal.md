@@ -1,5 +1,7 @@
 # SQLITE WAL
 
+WAL mode on `siem.db`: concurrent reads during writes, typical for local demo workloads.
+
 This page documents **sqlite wal** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

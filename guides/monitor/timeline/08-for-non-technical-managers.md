@@ -58,4 +58,3 @@ Pauses external comms until Timeline screenshot approved by incident commander; 
 ### Edge cases and gotchas
 
 Dense lanes overwhelm executives, simplify filters aggressively. Local timezone in labels must be stated in email caption.
-

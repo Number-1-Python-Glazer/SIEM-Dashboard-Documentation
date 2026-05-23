@@ -1,4 +1,4 @@
-# SOAR Console
+# SOAR console
 
 **Sidebar:** Respond → SOAR Console
 

@@ -1,5 +1,7 @@
 # Express routes
 
+How routes mount in `server/index.js`: auth first, then alerts, ingest, threat, geo, admin.
+
 This page documents **express routes** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

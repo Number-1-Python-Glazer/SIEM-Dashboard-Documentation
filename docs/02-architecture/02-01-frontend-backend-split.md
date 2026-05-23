@@ -1,4 +1,6 @@
-# Frontend and backend split
+# Frontend/backend split
+
+React SPA on port 5173; Express API on 3001. Vite proxies `/api` during development. Production serves the built SPA from Express.
 
 This page documents **why the React UI and Express API are separate processes** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 

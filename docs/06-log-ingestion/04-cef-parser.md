@@ -1,5 +1,7 @@
 # CEF parser
 
+Parses CEF header and extension fields into normalized events (`src/services/parsers/cef.js`).
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **cef** path handles ArcSight-style CEF headers with vendor, product, signature, and key=value extensions.
 
 ## Why this format matters

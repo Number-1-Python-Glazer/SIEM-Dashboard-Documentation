@@ -1,5 +1,7 @@
 # Server validate
 
+`server/validate.js`: whitelist validation for POST bodies (alerts, watchlist, SOAR log entries).
+
 This page documents **server validate** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

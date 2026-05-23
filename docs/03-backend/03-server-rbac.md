@@ -4,7 +4,7 @@ This page documents **server rbac — roles and permissions** as implemented in 
 
 ## Role in the platform
 
-Server rbac — roles and permissions sits in the split architecture where the browser runs detection and visualization while the API holds secrets, sessions, and SQLite persistence. Understanding this piece prevents misconfigured labs and false bug reports during demos.
+Server rbac: roles and permissions sits in the split architecture where the browser runs detection and visualization while the API holds secrets, sessions, and SQLite persistence. Understanding this piece prevents misconfigured labs and false bug reports during demos.
 
 ## Behavior summary
 

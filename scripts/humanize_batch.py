@@ -104,7 +104,7 @@ def sentence_case_heading(text: str) -> str:
             if bare in PROPER_NOUNS or bare.isupper() and len(bare) > 1:
                 new_words.append(w)
             elif j == 0:
-                new_words.append(w[0].upper() + w[1:] if w else w)
+                new_words.append(w)
             elif bare.lower() in {
                 "the", "a", "an", "and", "or", "vs", "for", "to", "in", "on", "at",
                 "by", "with", "from", "of", "when", "if", "as", "is", "are", "be",

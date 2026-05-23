@@ -1,5 +1,7 @@
 # Server crypto
 
+`server/crypto.js`: AES helpers for encrypting threat API keys stored in the database.
+
 This page documents **server crypto** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

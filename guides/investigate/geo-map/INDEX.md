@@ -1,4 +1,4 @@
-# Geo Map: documentation index
+# Geo map: documentation index
 
 **Sidebar path:** Investigate → Geo Map
 

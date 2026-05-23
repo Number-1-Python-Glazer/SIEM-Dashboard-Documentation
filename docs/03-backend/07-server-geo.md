@@ -1,5 +1,7 @@
 # Server GEO
 
+`server/geo.js`: MaxMind GeoLite2 lookups for IP enrichment on ingest.
+
 This page documents **server geo** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

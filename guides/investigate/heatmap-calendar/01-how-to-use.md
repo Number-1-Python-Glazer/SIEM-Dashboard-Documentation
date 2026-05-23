@@ -1,4 +1,4 @@
-# Heatmap Calendar
+# Heatmap calendar
 
 **Sidebar:** Investigate → Heatmap Calendar
 

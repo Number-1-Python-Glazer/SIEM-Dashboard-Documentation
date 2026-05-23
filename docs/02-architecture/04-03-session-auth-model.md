@@ -1,5 +1,7 @@
 # Session auth model
 
+Cookie sessions (`siem.sid`), bcrypt login, CSRF on writes, role copied into session after auth.
+
 This page documents **cookie sessions and role tiers** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

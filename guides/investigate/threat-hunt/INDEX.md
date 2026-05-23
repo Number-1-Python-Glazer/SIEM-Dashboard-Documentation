@@ -1,4 +1,4 @@
-# Threat Hunt: documentation index
+# Threat hunt: documentation index
 
 **Sidebar path:** Investigate → Threat Hunt
 

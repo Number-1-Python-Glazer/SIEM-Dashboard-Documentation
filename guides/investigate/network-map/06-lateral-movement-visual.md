@@ -6,7 +6,7 @@ subsection: Lateral movement on the Network Map
 last_updated: 2026-05-23
 ---
 
-# Lateral movement on the Network Map
+# Lateral movement on the network map
 
 **Sidebar path:** Investigate → Network Map
 

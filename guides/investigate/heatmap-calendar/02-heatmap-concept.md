@@ -6,7 +6,7 @@ subsection: What a Heatmap Calendar is
 last_updated: 2026-05-23
 ---
 
-# What a Heatmap Calendar is
+# What a heatmap calendar is
 
 **Sidebar path:** Investigate → Heatmap Calendar
 

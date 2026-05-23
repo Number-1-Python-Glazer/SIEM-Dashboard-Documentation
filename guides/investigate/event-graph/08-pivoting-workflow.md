@@ -6,7 +6,7 @@ subsection: Pivoting from Event Graph to raw logs
 last_updated: 2026-05-23
 ---
 
-# Pivoting from Event Graph to raw logs
+# Pivoting from event graph to raw logs
 
 **Sidebar path:** Investigate → Event Graph
 

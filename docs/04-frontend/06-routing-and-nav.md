@@ -1,5 +1,7 @@
 # Routing and nav
 
+React Router paths mapped to sidebar modules and deep links.
+
 This page documents **routing and nav** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

@@ -1,5 +1,7 @@
 # Rate limits
 
+Per-route limits on auth attempts, general API traffic, geo lookups, and log ingest volume.
+
 This page documents **rate limits** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

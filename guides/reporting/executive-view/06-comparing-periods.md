@@ -61,4 +61,4 @@ Border straddle: alerts timestamped exactly at T−24h may fall into `prevDay` o
 
 ### How an analyst uses delta during weekly leadership email
 
-Maintain a five-row spreadsheet: date, ALERTS (24H), delta, CRITICAL (24H), **ACTIVE INCIDENTS**, **RISK POSTURE**. Monday emails cite only delta direction plus one hypothesised cause (change ticket, campaign, holiday effect). Cross-check surprising upward deltas with Attack Timeline: if spikes cluster at 02:00 UTC, attribute to scheduled scans not breach. When delta unchanged (0) but posture rose, write "volume flat, severity backlog worse" — this teaches executives composition vs volume.
+Maintain a five-row spreadsheet: date, ALERTS (24H), delta, CRITICAL (24H), **ACTIVE INCIDENTS**, **RISK POSTURE**. Monday emails cite only delta direction plus one hypothesised cause (change ticket, campaign, holiday effect). Cross-check surprising upward deltas with Attack Timeline: if spikes cluster at 02:00 UTC, attribute to scheduled scans not breach. When delta unchanged (0) but posture rose, write "volume flat, severity backlog worse", this teaches executives composition vs volume.

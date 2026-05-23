@@ -1,4 +1,6 @@
-# Data flow
+# Data flow diagram
+
+Paths for log ingest, alert creation, threat lookup, and authentication. See [system overview](00-system-overview.md) for the ASCII diagram.
 
 This page documents **end-to-end path from log paste to alert card** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 

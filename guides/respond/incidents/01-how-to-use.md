@@ -1,4 +1,4 @@
-# Incident Response
+# Incident response
 
 **Sidebar:** Respond → Incidents
 

@@ -1,5 +1,7 @@
 # JSON log parser
 
+Accepts JSON log arrays or NDJSON; maps common field names to the internal schema.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **json** path handles Generic JSON lines from applications with ad-hoc field names.
 
 ## Why this format matters

@@ -1,4 +1,4 @@
-# Risk Scoring
+# Risk scoring
 
 **Sidebar:** Intelligence → Risk Scoring
 

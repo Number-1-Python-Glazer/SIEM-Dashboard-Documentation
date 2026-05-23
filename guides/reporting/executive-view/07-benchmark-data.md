@@ -13,7 +13,7 @@ last_updated: 2026-05-23
 
 ### What you are looking at
 
-The lower half of Executive View is a *benchmark theatre*: left card simulates NIST CSF maturity percentages; right card mixes severity mix bars with four operational tiles. None of the NIST numbers come from formal assessments; they are deterministic functions of `riskScore`, `blockedIps.size`, enabled `detectionRules.length`, and `stats.resolved24`. The right card header THREAT CLASSIFICATION — LAST 7 DAYS is misleading today: counts include all in-memory alerts, not seven days (`last7d` is computed in `stats` but not applied to that chart). The quad tiles split into live (BLOCKED IPs, **LIVE EPS**) and demo literals (**MTTR** `12m`, FALSE POS % `8%` from source comments). Presenters should physically point to each category when speaking so auditors record which claims are heuristic versus measured.
+The lower half of Executive View is a *benchmark theatre*: left card simulates NIST CSF maturity percentages; right card mixes severity mix bars with four operational tiles. None of the NIST numbers come from formal assessments; they are deterministic functions of `riskScore`, `blockedIps.size`, enabled `detectionRules.length`, and `stats.resolved24`. The right card header THREAT CLASSIFICATION. LAST 7 DAYS is misleading today: counts include all in-memory alerts, not seven days (`last7d` is computed in `stats` but not applied to that chart). The quad tiles split into live (BLOCKED IPs, **LIVE EPS**) and demo literals (**MTTR** `12m`, FALSE POS % `8%` from source comments). Presenters should physically point to each category when speaking so auditors record which claims are heuristic versus measured.
 
 ### What is happening underneath
 
@@ -58,7 +58,7 @@ No; they are dashboard heuristics derived from alerts, blocks, rules, and **RISK
 
 Literals in source. `mttr: 12 // simulated: mean time to respond (minutes)` and `falsePositive: 8 // simulated %`. They stand in for future integrations with Case Manager timestamps and alert disposition analytics. Do not benchmark SOC staff against twelve minutes without replacing the constant.
 
-#### Why does **THREAT CLASSIFICATION — LAST 7 DAYS** include older alerts?
+#### Why does **THREAT CLASSIFICATION: LAST 7 DAYS** include older alerts?
 
 The UI header implies seven days, but severity counts use `alerts.filter` without a time predicate, the `last7d` variable in stats is unused in that section. Percentages reflect entire session history until alerts are cleared. Treat label as aspirational; verify counts in Monitor → Alert Manager with time filters when accuracy matters.
 

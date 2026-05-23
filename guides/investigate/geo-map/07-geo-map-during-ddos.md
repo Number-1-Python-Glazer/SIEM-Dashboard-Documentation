@@ -6,7 +6,7 @@ subsection: Using the Geo Map during a DDoS
 last_updated: 2026-05-23
 ---
 
-# Using the Geo Map during a DDoS
+# Using the geo map during a DDoS
 
 **Sidebar path:** Investigate → Geo Map
 

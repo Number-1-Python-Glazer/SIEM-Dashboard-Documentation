@@ -1,5 +1,7 @@
 # Windows event parser
 
+Parses Windows Security event text exports into normalized events.
+
 Log ingestion in HABIBI-SIEM accepts many vendor formats. The **windows_event** path handles Windows Event Forwarding JSON with Event ID and level display name.
 
 ## Why this format matters

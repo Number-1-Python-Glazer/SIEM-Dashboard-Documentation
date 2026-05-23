@@ -505,7 +505,7 @@ def sentence_case_heading(line: str) -> str:
             out.append(word.replace(bare, bare if i == 0 else bare))
             continue
         if i == 0:
-            out.append(word[0].lower() + word[1:] if word[0].isupper() and len(word) > 1 else word)
+            out.append(word)
         else:
             if word.isupper() and len(word) <= 4:
                 out.append(word)

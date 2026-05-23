@@ -1,4 +1,6 @@
-# Correlation engine
+# Correlation engine (stub)
+
+Short pointer: full write-up in [15-correlation-engine.md](15-correlation-engine.md). Groups alerts by source IP within a 60-second window.
 
 This page documents **correlation engine** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 

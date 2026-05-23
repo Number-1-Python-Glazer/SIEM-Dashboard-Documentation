@@ -1,4 +1,4 @@
-# Event Graph: documentation index
+# Event graph: documentation index
 
 **Sidebar path:** Investigate → Event Graph
 

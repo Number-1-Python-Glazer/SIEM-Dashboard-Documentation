@@ -1,5 +1,7 @@
 # SIEM context
 
+`SiemContext`: logs, alerts, `DetectionEngine` instance, and the `processLogs()` pipeline.
+
 This page documents **siem context** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

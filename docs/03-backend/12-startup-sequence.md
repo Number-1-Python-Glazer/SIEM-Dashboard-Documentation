@@ -1,5 +1,7 @@
 # Startup sequence
 
+Boot sequence: load env, validate secrets, init SQLite, seed dev users if allowed, listen on `PORT`.
+
 This page documents **startup sequence** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

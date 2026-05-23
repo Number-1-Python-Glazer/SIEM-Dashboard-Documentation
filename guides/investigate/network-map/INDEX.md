@@ -1,4 +1,4 @@
-# Network Map: documentation index
+# Network map: documentation index
 
 **Sidebar path:** Investigate → Network Map
 

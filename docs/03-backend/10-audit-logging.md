@@ -1,5 +1,7 @@
 # Audit logging
 
+Server-side audit trail written on security-sensitive mutations (`writeAudit` in `server/db.js`).
+
 This page documents **audit logging** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

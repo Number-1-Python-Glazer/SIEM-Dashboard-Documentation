@@ -1,4 +1,4 @@
-# Incident Response; Documentation Index
+# Incident response; documentation index
 
 **Sidebar path:** Respond → Incidents
 

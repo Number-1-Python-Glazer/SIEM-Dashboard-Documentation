@@ -1,5 +1,7 @@
 # Styling system
 
+Tailwind config, dark SOC palette, severity colour tokens, shared layout utilities.
+
 This page documents **styling system** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

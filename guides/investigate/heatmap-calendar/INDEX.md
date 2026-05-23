@@ -1,4 +1,4 @@
-# Heatmap Calendar: documentation index
+# Heatmap calendar: documentation index
 
 **Sidebar path:** Investigate → Heatmap
 

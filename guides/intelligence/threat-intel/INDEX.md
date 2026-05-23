@@ -1,4 +1,4 @@
-# Threat Intelligence; Documentation Index
+# Threat Intelligence; documentation index
 
 **Sidebar path:** Intelligence → Threat Intel
 

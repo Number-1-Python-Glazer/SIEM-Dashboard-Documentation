@@ -1,5 +1,7 @@
 # Threat model sketch
 
+STRIDE-oriented trust boundaries: browser, API, SQLite, external threat and geo services.
+
 This page documents **assumptions for classroom deployment** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

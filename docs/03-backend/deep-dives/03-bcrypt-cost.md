@@ -1,5 +1,7 @@
 # Bcrypt cost
 
+bcrypt cost factor for password hashing and the dev-vs-prod performance tradeoff.
+
 This page documents **bcrypt cost** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

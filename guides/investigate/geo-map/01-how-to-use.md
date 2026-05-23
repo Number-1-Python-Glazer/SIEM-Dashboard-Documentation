@@ -1,4 +1,4 @@
-# Geo Map
+# Geo map
 
 **Sidebar:** Investigate → Geo Map
 

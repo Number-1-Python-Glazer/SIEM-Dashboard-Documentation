@@ -16,6 +16,7 @@ PROFILES: dict[str, tuple[str, str]] = {
     "guides-config": ("humanize_batch", "infrastructure/configure/reporting/ingest guides"),
     "guides-deep": ("humanize_guides_batch", "respond/intelligence deep structure pass"),
     "round2": ("humanize_docs_round2", "Targeted round-2 doc rewrites"),
+    "editor": ("humanize_editor_pass", "Full 6-part human editor pass (docs + guides + pentests)"),
 }
 
 

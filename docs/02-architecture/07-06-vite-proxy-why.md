@@ -1,4 +1,6 @@
-# Development proxy
+# Why Vite proxies `/api` in dev
+
+Dev proxy keeps cookies same-origin and avoids extra CORS config while testing CSRF locally.
 
 This page documents **why browser calls /api on same origin in labs** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 

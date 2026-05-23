@@ -1,5 +1,7 @@
 # Middleware stack
 
+Middleware order in Express: Helmet, CORS, rate limiters, session, JSON parser, then routes.
+
 This page documents **middleware stack** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

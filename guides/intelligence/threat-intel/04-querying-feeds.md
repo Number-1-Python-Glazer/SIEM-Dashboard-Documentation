@@ -15,7 +15,7 @@ last_updated: 2026-05-23
 
 ### What you are looking at
 
-Automatic: On ingest, high/critical external alerts trigger `soarCheckIp` (SOAR), not Threat Intel refresh (which is passive recompute). On-demand: Threat Intel updates when you navigate to it after new alerts; SOAR Manual Lookup for explicit queries.
+Automatic: On ingest, high/critical external alerts trigger `soarCheckIp` (SOAR), not Threat Intel refresh (which is passive recompute). On-demand: Threat Intel updates when you open it after new alerts; SOAR Manual Lookup for explicit queries.
 
 ### What is happening underneath
 

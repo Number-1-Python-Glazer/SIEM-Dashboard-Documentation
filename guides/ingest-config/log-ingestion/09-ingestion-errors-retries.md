@@ -72,7 +72,7 @@ lines.forEach((line, i) => {
 ```
 JSON formats add `line N: ${err.message}` for `JSON.parse` failures. CSV skips header row then parses data rows. Partial success is normal; 90 matched lines and 10 errors still produce 90 preview events and an enabled ingest button.
 
-### Preview UI error display :Log Ingestion screen:
+### Preview UI error display:Log ingestion screen:
 
 ```javascript
 {preview.errors.slice(0, 5).map((e, i) => (...))}

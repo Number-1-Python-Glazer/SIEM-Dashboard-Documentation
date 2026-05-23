@@ -1,5 +1,7 @@
 # Server threat
 
+`server/threat.js`: AbuseIPDB proxy with quota tracking and rate limiting.
+
 This page documents **server threat** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

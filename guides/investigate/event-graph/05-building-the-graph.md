@@ -6,7 +6,7 @@ subsection: How the Event Graph is built from raw logs
 last_updated: 2026-05-23
 ---
 
-# How the Event Graph is built from raw logs
+# How the event graph is built from raw logs
 
 **Sidebar path:** Investigate → Event Graph
 

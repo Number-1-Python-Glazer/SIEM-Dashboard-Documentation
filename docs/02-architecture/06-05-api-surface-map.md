@@ -1,5 +1,7 @@
 # API surface map
 
+REST endpoints grouped by auth, alerts, ingest, threat intel, and admin operations.
+
 This page documents **major REST routes grouped by feature** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

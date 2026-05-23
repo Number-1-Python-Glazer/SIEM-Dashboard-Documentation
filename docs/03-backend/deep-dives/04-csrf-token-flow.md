@@ -1,5 +1,7 @@
 # CSRF token flow
 
+CSRF token issued on login, stored in session, required via `X-CSRF-Token` on mutating requests.
+
 This page documents **csrf token flow** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

@@ -1,5 +1,7 @@
 # Severity calculation
 
+Severity assignment: rule default, MITRE tier weighting, and escalation when multiple rules fire.
+
 This page documents **severity calculation** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform

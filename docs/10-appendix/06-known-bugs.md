@@ -20,7 +20,7 @@ This appendix tracks intentional teaching limitations and open gaps in HABIBI-SI
 
 **Workaround:** Clear filters, rerun campaign, reload page once.
 
-## Command palette versus sidebar IDs
+## Command palette versus sidebar iDs
 
 **Symptom:** Palette jump goes nowhere or opens wrong module.
 

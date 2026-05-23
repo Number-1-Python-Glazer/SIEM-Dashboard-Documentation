@@ -2,7 +2,7 @@
 
 # HABIBI-SIEM — Documentation Site
 
-**The fastest way to make a non-technical stakeholder understand threat detection is to let them play the breach.**
+The fastest way to make a non-technical stakeholder understand threat detection is to let them play the breach.
 
 </div>
 
@@ -28,39 +28,39 @@
 
 ---
 
-## The Problem With Security Documentation
+## The problem with security documentation
 
 A CISO reads a runbook. A CTO skims an architecture diagram. An investor closes the PDF. A junior analyst reads the guide but doesn't retain it until they've seen an alert fire.
 
 None of them understand what the system actually does.
 
-This site is the alternative — 17 hand-crafted interactive experiences that communicate SIEM concepts through doing instead of reading. Play the stealth game and you understand why detection rules exist. Build a rule in The Forge and you understand threshold tuning. Watch The Simulation and you understand a kill chain faster than any slide deck. Land on the Observation Deck and every component of the architecture is immediately spatial and memorable.
+This site is the alternative: 17 hand-crafted interactive experiences that communicate SIEM concepts through doing instead of reading. Play the stealth game and you understand why detection rules exist. Build a rule in The Forge and you understand threshold tuning. Watch The Simulation and you understand a kill chain faster than any slide deck. Land on the Observation Deck and every component of the architecture is immediately spatial and memorable.
 
-Technical depth for engineers. Intuitive experience for everyone else. This is what normalising complex security infrastructure to stakeholders looks like in practice — not a presentation, not a whitepaper, an environment they can explore.
+Technical depth for engineers. Intuitive experience for everyone else. This is what normalising complex security infrastructure to stakeholders looks like in practice, not a presentation or whitepaper, but an environment they can explore.
 
 ---
 
-## The 17 Experiences
+## The 17 experiences
 
 | Experience | What it teaches |
 |:-----------|:----------------|
-| **Meridian-7** — Landing | The scale and ambition of the system before you've seen a single line of code |
-| **Observation Deck** | Full architecture as a living cosmos — every module, every connection, every dependency |
+| **Meridian-7** (landing) | The scale and ambition of the system before you've seen a single line of code |
+| **Observation Deck** | Full architecture as a living cosmos: every module, every connection, every dependency |
 | **The War Room** | Real-time attack simulation across a tactical grid |
 | **The Signal Room** | Six signal modes showing how the detection engine processes noise into intelligence |
-| **The Terminal** | Full interactive shell — `ssh`, `grep`, `tail -f`, `nmap`, `sudo` — the system from the inside |
-| **The Breach** | Playable SOC incident response — triage alerts, isolate nodes, contain threats in real time |
+| **The Terminal** | Full interactive shell with `ssh`, `grep`, `tail -f`, `nmap`, `sudo`: the system from the inside |
+| **The Breach** | Playable SOC incident response: triage alerts, isolate nodes, contain threats in real time |
 | **The Ghost Network** | Infinite procedural network with live threat propagation and packet capture |
 | **The Cipher** | Detection docs unlocked through six cryptography puzzles |
 | **The Simulation** | Cinematic MITRE ATT&CK kill chain reconstructions with SIEM interception |
 | **The Interrogation Room** | Intercepted attacker-C2 communications annotated with detection rules |
 | **The Forge** | Visual drag-and-drop detection rule builder with live testing |
-| **The Deep Archive** | 3D library — navigate filing cabinets to read technical documentation |
-| **The Heist** | Stealth game — breach the system from the attacker's perspective |
+| **The Deep Archive** | 3D library: browse filing cabinets to read technical documentation |
+| **The Heist** | Stealth game from the attacker's perspective: breach the system step by step |
 | **The Cartography** | WebGL globe with live attack arc visualizations by threat actor and tactic |
-| **The Lab** | Payload injection sandbox — fire real attack patterns, watch the SIEM catch them |
+| **The Lab** | Payload injection sandbox: fire real attack patterns, watch the SIEM catch them |
 | **The Memorial** | Six famous breaches reconstructed as scroll narratives with SIEM interception mapping |
-| **The Resonance** | SIEM detection rules as a playable synthesizer — six rules, six instruments |
+| **The Resonance** | SIEM detection rules as a playable synthesizer: six rules, six instruments |
 
 ---
 
@@ -103,7 +103,7 @@ GSAP · CodeMirror · interact.js · Lenis · Howler.js · Chart.js
 <a href="https://number-1-python-glazer.github.io/SIEM-Dashboard-Documentation/brain/?v=7.0.0-wormhole">
 <img src="assets/readme-wormhole-map-preview.png" alt="Wormhole observation deck preview" width="320" />
 </a>
-<br /><strong>Architecture map</strong> · live interactive scene
+<br /><strong>Architecture map</strong> · interactive module index
 </td>
 </tr>
 </table>
@@ -169,7 +169,7 @@ The dashboard itself
 
 | Path | Contents |
 |:-----|:---------|
-| [`index.html`](index.html) | Landing — Meridian-7 |
+| [`index.html`](index.html) | Landing (Meridian-7) |
 | [`brain/`](brain/) | Observation Deck |
 | [`left.html`](left.html) | The War Room |
 | [`right.html`](right.html) | The Signal Room |

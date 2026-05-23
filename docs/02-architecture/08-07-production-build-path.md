@@ -1,5 +1,7 @@
 # Production build path
 
+`npm run build` writes to `dist/`; Express serves static assets and SPA fallback in production.
+
 This page documents **serving static UI behind API** as implemented in HABIBI-SIEM for coursework and small-team SOC labs.
 
 ## Role in the platform
