@@ -25,7 +25,7 @@ CHECKS = [
     ("intercept.html", ["intercept.html"], [["DECRYPT", "SESSION-OMEGA"]]),
     ("forge.html", ["forge.html"], [["forge-canvas", "Export JSON"]]),
     ("archive.html", ["archive.html"], [["THREE", "overlay"]]),
-    ("heist.html", ["heist.html"], [["kaboom", "vault"]]),
+    ("heist.html", ["heist.html"], [["kaboom", "EXFIL"], ["kaboom", "guide-overlay"]]),
     ("cartography.html", ["cartography.html"], [["Globe", "LAYERS"]]),
     ("lab.html", ["lab.html"], [["Chart", "payload"]]),
     ("memorial.html", ["memorial.html"], [["BREACH", "chapter"]]),

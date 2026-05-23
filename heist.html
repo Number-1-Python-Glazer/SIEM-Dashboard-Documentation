@@ -96,7 +96,25 @@
     #rules-panel .rule-block{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(51,65,85,.5)}
     #rules-panel .rule-block strong{color:#00d4ff;display:block;margin-bottom:4px}
     #rules-close{position:absolute;top:8px;right:10px;background:none;border:none;color:#64748b;font-size:16px;cursor:pointer}
-    @media (max-width:640px){#controls-hint{display:none}#hud-bar{font-size:8px;gap:6px}}
+    #guide-btn{font:inherit;padding:3px 8px;font-size:8px;background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.35);color:#ffd60a;cursor:pointer;margin-left:4px}
+    #guide-btn:hover{background:rgba(255,214,10,.18)}
+    #guide-overlay{position:fixed;inset:0;background:rgba(5,6,15,.88);display:flex;align-items:center;justify-content:center;z-index:210;padding:16px;pointer-events:none;transition:opacity .3s,visibility .3s}
+    #guide-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    #guide-card{max-width:520px;width:100%;max-height:min(88vh,640px);overflow-y:auto;padding:22px 24px;background:#0f1428;border:1px solid rgba(255,214,10,.35);box-shadow:0 0 36px rgba(255,214,10,.1);pointer-events:auto}
+    #guide-card h2{font-size:13px;color:#ffd60a;letter-spacing:2px;margin-bottom:10px;text-transform:uppercase}
+    #guide-card .lead{font-size:11px;color:#94a3b8;line-height:1.55;margin-bottom:14px}
+    #guide-card section{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(51,65,85,.45)}
+    #guide-card section:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    #guide-card h3{font-size:10px;color:#00d4ff;letter-spacing:1.5px;margin-bottom:6px}
+    #guide-card ul{font-size:10px;color:#cbd5e1;line-height:1.55;padding-left:16px;margin:0}
+    #guide-card li{margin-bottom:4px}
+    #guide-card .tip{color:#64748b;font-size:9px;margin-top:12px;line-height:1.5}
+    #guide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+    #guide-begin{font:inherit;padding:10px 16px;font-size:10px;letter-spacing:1px;background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.45);color:#00ff88;cursor:pointer}
+    #guide-begin:hover{background:rgba(0,255,136,.22)}
+    #guide-rules-link{font:inherit;padding:10px 14px;font-size:10px;letter-spacing:1px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.35);color:#00d4ff;cursor:pointer}
+    #guide-rules-link:hover{background:rgba(0,212,255,.18)}
+    @media (max-width:640px){#controls-hint{display:none}#hud-bar{font-size:8px;gap:6px}#guide-card{padding:18px 16px}}
   </style>
 </head>
 <body>
@@ -106,6 +124,7 @@
       <span class="zone" id="hud-zone">PERIMETER</span>
       <span class="obj" id="hud-objectives">EXFIL 0/6 · NEED 4</span>
       <span class="alarm" id="hud-alarm">ALARM</span>
+      <button id="guide-btn" type="button" title="How to play">GUIDE</button>
       <button id="audio-toggle" type="button" title="Ambient audio (Tone.js)">AUDIO OFF</button>
       <div id="noise-wrap"><span>NOISE</span><div id="noise-bar"><div id="noise-fill"></div></div></div>
       <span id="controls-hint">WASD · E interact · H patrol · 1/2 levels · Shift sprint</span>
@@ -143,6 +162,56 @@
       <div id="modal-btns">
         <button class="overlay-btn primary" id="modal-submit" type="button">SUBMIT</button>
         <button class="overlay-btn" id="modal-cancel" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+  <div id="guide-overlay">
+    <div id="guide-card">
+      <h2>How to Play — The Heist</h2>
+      <p class="lead">You are the attacker. Steal data from a segmented facility and reach the exit before Meridian-7’s SIEM rules catch you. Each death screen names the real detection rule that would have fired.</p>
+      <section>
+        <h3>Objective</h3>
+        <ul>
+          <li>Copy <strong>4 of 6</strong> yellow <strong>DATA</strong> nodes (hold <strong>E</strong> for 3 seconds at each).</li>
+          <li>Reach the green <strong>EXIT</strong> tile without triggering a detection.</li>
+          <li>HUD shows progress: <strong>EXFIL 0/6 · NEED 4</strong>.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Controls</h3>
+        <ul>
+          <li><strong>WASD</strong> or arrow keys — move</li>
+          <li><strong>Shift</strong> — sprint (faster, raises noise meter)</li>
+          <li><strong>E</strong> — pick up items, use terminals; hold to copy data or SOAR override</li>
+          <li><strong>H</strong> — toggle guard patrol paths</li>
+          <li><strong>1 / 2</strong> — switch level (Perimeter / Core Run)</li>
+          <li>Touch devices — use the on-screen D-pad</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Map &amp; pickups</h3>
+        <ul>
+          <li><strong>Perimeter → Network → Core</strong> — three zones; pace checkpoint crossings.</li>
+          <li>Cyan pickups — <strong>ADMIN</strong> (core sensitive tiles), <strong>TOOL</strong> (doors 4444/8888), <strong>SOCL</strong> (reveals passwords).</li>
+          <li>Purple <strong>SOAR</strong> — during a 10s guard alert, hold <strong>E</strong> 4s to suppress escalation.</li>
+          <li>Password / SQL terminals — clues on sticky notes or via the social kit; wrong passwords stack toward brute-force.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>What gets you caught</h3>
+        <ul>
+          <li>Guard or camera cone ~0.8s — <strong>guard-vision</strong> (10s to SOAR or exit)</li>
+          <li>3 checkpoint tiles in 30s — <strong>rapid-requests</strong></li>
+          <li>Doors 4444/8888 without tool — <strong>unusual-port</strong></li>
+          <li>Core sensitive tiles without admin — <strong>sensitive-path</strong></li>
+          <li>3 bad passwords in 30s — <strong>brute-force</strong></li>
+          <li>Successful SQL injection — <strong>sql-injection</strong> (45s delayed alert)</li>
+        </ul>
+      </section>
+      <p class="tip">Tip: grab TOOL and ADMIN before pushing inward; don’t sprint through checkpoints; copy nodes before hitting SQL terminals (injection starts a countdown).</p>
+      <div id="guide-actions">
+        <button type="button" id="guide-begin">Begin heist</button>
+        <button type="button" id="guide-rules-link">Detection rules</button>
       </div>
     </div>
   </div>
@@ -306,6 +375,8 @@
     var overlayPanel = document.getElementById('overlay-panel');
     var modalScreen = document.getElementById('modal-screen');
     var rulesPanel = document.getElementById('rules-panel');
+    var guideOverlay = document.getElementById('guide-overlay');
+    var guideDismissed = false;
     var dpad = document.getElementById('dpad');
     var mobileMsg = document.getElementById('mobile-msg');
 
@@ -344,9 +415,46 @@
       try { toneSynth.triggerAttackRelease(note, dur || '8n'); } catch (_) { /* ignore */ }
     }
 
+    function pauseForGuide() {
+      state.paused = true;
+      guideOverlay.classList.remove('hidden');
+    }
+
+    function dismissGuide() {
+      if (guideDismissed && guideOverlay.classList.contains('hidden')) return;
+      guideDismissed = true;
+      guideOverlay.classList.add('hidden');
+      if (!state.gameOver && !state.modalType) state.paused = false;
+    }
+
+    function openGuide() {
+      guideOverlay.classList.remove('hidden');
+      if (!state.gameOver) state.paused = true;
+    }
+
+    document.getElementById('guide-begin').addEventListener('click', dismissGuide);
+    document.getElementById('guide-btn').addEventListener('click', openGuide);
+    document.getElementById('guide-rules-link').addEventListener('click', function () {
+      dismissGuide();
+      rulesPanel.classList.add('open');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!guideOverlay.classList.contains('hidden') && (e.key === 'Escape' || e.key === 'Enter')) {
+        dismissGuide();
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        if (guideOverlay.classList.contains('hidden')) openGuide();
+        else dismissGuide();
+      }
+    });
+
     if (isTouch) {
       mobileMsg.classList.add('show');
-      document.getElementById('mobile-continue').onclick = function () { mobileMsg.classList.remove('show'); dpad.classList.add('show'); };
+      document.getElementById('mobile-continue').onclick = function () {
+        mobileMsg.classList.remove('show');
+        dpad.classList.add('show');
+        pauseForGuide();
+      };
       dpad.querySelectorAll('.dpad-btn[data-dir]').forEach(function (btn) {
         var dir = btn.getAttribute('data-dir');
         btn.addEventListener('touchstart', function (e) { e.preventDefault(); touchKeys[dir] = true; });
@@ -1139,6 +1247,7 @@
 
     requestAnimationFrame(function () {
       startLevel(0);
+      if (!isTouch) pauseForGuide();
     });
   })();
   </script>
