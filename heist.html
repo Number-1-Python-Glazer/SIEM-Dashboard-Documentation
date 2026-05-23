@@ -15,66 +15,1093 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="The Heist — HABIBI-SIEM" />
   <meta name="twitter:description" content="Stealth data extraction puzzle — evade guards across segmented zones." />
-  <meta name="twitter:image" content="https://number-1-python-glazer.github.io/SIEM-Dashboard-Documentation/screenshots/heist-og.png" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="twitter:image" content="https://number-1-python-glazer.github.io/SIEM-Dashboard-Documentation/screenshots/heist-og.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>The Heist — Meridian-7</title>
   <link rel="stylesheet" href="assets/palette.css" />
   <link rel="stylesheet" href="assets/deck-nav.css" />
   <script src="https://cdn.jsdelivr.net/npm/kaboom@3000.0.1/dist/kaboom.js"></script>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:#0a0408;overflow:hidden}
-    #hdr{position:fixed;top:0;left:0;right:0;height:32px;display:flex;align-items:center;padding:0 12px;font:600 9px/1 Consolas,monospace;letter-spacing:2px;color:#fbbf24;z-index:10;background:rgba(10,4,8,.9)}
-    canvas{display:block}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:#0a0d1a;overflow:hidden;font-family:Consolas,"Courier New",monospace;color:#cbd5e1}
+    #game-shell{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column}
+    #hud-bar{height:36px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 10px;background:rgba(10,13,26,.94);border-bottom:1px solid rgba(0,212,255,.25);font-size:9px;letter-spacing:1.5px;z-index:20}
+    #hud-bar .lvl{color:#ffd60a;font-weight:700}
+    #hud-bar .zone{color:#00d4ff}
+    #hud-bar .obj{color:#ffd60a;margin-left:8px}
+    #hud-bar .alarm{color:#ff2d55;font-weight:700;display:none}
+    #hud-bar .alarm.on{display:inline;animation:blink .6s infinite alternate}
+    @keyframes blink{from{opacity:1}to{opacity:.35}}
+    #noise-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;min-width:120px}
+    #noise-bar{width:80px;height:8px;background:#1e293b;border:1px solid #334155;border-radius:2px;overflow:hidden}
+    #noise-fill{height:100%;width:0;background:linear-gradient(90deg,#00d4ff,#ff2d55);transition:width .15s}
+    #controls-hint{color:#64748b;font-size:8px;margin-left:8px}
+    #canvas-host{flex:1;position:relative;overflow:hidden;background:#0a0d1a}
+    #canvas-host canvas{display:block;width:100%!important;height:100%!important}
+    #status-toast{position:absolute;left:50%;bottom:88px;transform:translateX(-50%);padding:8px 14px;background:rgba(10,13,26,.92);border:1px solid rgba(0,255,136,.4);color:#00ff88;font-size:10px;letter-spacing:1px;pointer-events:none;opacity:0;transition:opacity .25s;z-index:15;max-width:90%;text-align:center}
+    #status-toast.show{opacity:1}
+    #interact-prompt{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);padding:6px 12px;background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.45);color:#ffd60a;font-size:9px;letter-spacing:1px;display:none;z-index:15}
+    #interact-prompt.show{display:block}
+    #copy-bar-wrap{position:absolute;left:50%;top:50%;transform:translate(-50%,-40px);width:160px;display:none;z-index:15}
+    #copy-bar-wrap.show{display:block}
+    #copy-label{font-size:8px;color:#ffd60a;text-align:center;margin-bottom:4px;letter-spacing:1px}
+    #copy-bar{height:6px;background:#1e293b;border:1px solid #475569;border-radius:2px;overflow:hidden}
+    #copy-fill{height:100%;width:0;background:#ffd60a;transition:width .05s linear}
+    #alarm-timer{position:absolute;top:48px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(255,45,85,.15);border:1px solid #ff2d55;color:#ff2d55;font-size:11px;font-weight:700;letter-spacing:2px;display:none;z-index:15}
+    #alarm-timer.show{display:block}
+    #overlay-screen{position:fixed;inset:0;background:rgba(5,6,15,.94);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+    #overlay-screen.show{display:flex}
+    #overlay-panel{max-width:520px;width:100%;background:#0f1428;border:1px solid rgba(255,45,85,.45);padding:24px;box-shadow:0 0 40px rgba(255,45,85,.15)}
+    #overlay-panel.win{border-color:rgba(0,255,136,.5);box-shadow:0 0 40px rgba(0,255,136,.12)}
+    #overlay-panel h2{font-size:16px;color:#ff2d55;letter-spacing:3px;margin-bottom:12px}
+    #overlay-panel.win h2{color:#00ff88}
+    #overlay-panel .rule{font-size:12px;color:#ffd60a;margin-bottom:8px}
+    #overlay-panel .component{font-size:10px;color:#00d4ff;margin-bottom:10px}
+    #overlay-panel .explain{font-size:11px;line-height:1.6;color:#94a3b8;margin-bottom:16px}
+    #overlay-panel .doc-link{display:inline-block;color:#00d4ff;font-size:10px;margin-bottom:18px;text-decoration:none;border-bottom:1px dotted rgba(0,212,255,.4)}
+    #overlay-panel .doc-link:hover{color:#00ff88}
+    .overlay-btns{display:flex;gap:10px;flex-wrap:wrap}
+    .overlay-btn{font:inherit;padding:10px 16px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.4);color:#00d4ff;cursor:pointer;letter-spacing:1px;font-size:10px}
+    .overlay-btn:hover{background:rgba(0,212,255,.22)}
+    .overlay-btn.primary{background:rgba(0,255,136,.12);border-color:rgba(0,255,136,.45);color:#00ff88}
+    #modal-screen{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:90;padding:16px}
+    #modal-screen.show{display:flex}
+    #modal-panel{background:#0f1428;border:1px solid rgba(0,212,255,.35);padding:20px;max-width:440px;width:100%}
+    #modal-panel h3{font-size:12px;color:#00d4ff;letter-spacing:2px;margin-bottom:10px}
+    #modal-panel p{font-size:10px;color:#94a3b8;line-height:1.5;margin-bottom:10px}
+    #modal-panel input{width:100%;padding:8px;background:#0a0d1a;border:1px solid #334155;color:#e2e8f0;font:inherit;margin-bottom:10px}
+    #modal-panel .clue{font-size:9px;color:#64748b;border-left:2px solid #334155;padding-left:8px;margin-bottom:12px}
+    #modal-btns{display:flex;gap:8px;flex-wrap:wrap}
+    #level-select{position:absolute;top:44px;right:10px;z-index:15;display:flex;gap:6px}
+    .lvl-btn{font:inherit;padding:4px 8px;font-size:8px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);color:#00d4ff;cursor:pointer}
+    .lvl-btn.active{background:rgba(255,214,10,.15);border-color:#ffd60a;color:#ffd60a}
+    #audio-toggle{font:inherit;padding:3px 8px;font-size:8px;background:transparent;border:1px solid #334155;color:#64748b;cursor:pointer;margin-left:6px}
+    #audio-toggle.on{color:#00ff88;border-color:rgba(0,255,136,.4)}
+    #mobile-msg{position:fixed;inset:0;background:#0a0d1a;display:none;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
+    #mobile-msg.show{display:flex;flex-direction:column;gap:16px}
+    #mobile-msg p{font-size:12px;line-height:1.6;color:#94a3b8;max-width:360px}
+    #dpad{position:fixed;bottom:96px;left:16px;width:120px;height:120px;display:none;z-index:25;touch-action:none}
+    #dpad.show{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:4px}
+    .dpad-btn{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.35);border-radius:6px;color:#00d4ff;font-size:18px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+    .dpad-btn:active{background:rgba(0,212,255,.35)}
+    .dpad-btn.empty{background:transparent;border:none}
+    #rules-panel{position:fixed;right:0;top:36px;bottom:80px;width:280px;background:rgba(10,13,26,.96);border-left:1px solid rgba(0,212,255,.2);padding:14px;overflow-y:auto;transform:translateX(100%);transition:transform .25s;z-index:80;font-size:9px;line-height:1.55}
+    #rules-panel.open{transform:translateX(0)}
+    #rules-panel h4{color:#ffd60a;font-size:10px;letter-spacing:2px;margin-bottom:10px}
+    #rules-panel .rule-block{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(51,65,85,.5)}
+    #rules-panel .rule-block strong{color:#00d4ff;display:block;margin-bottom:4px}
+    #rules-close{position:absolute;top:8px;right:10px;background:none;border:none;color:#64748b;font-size:16px;cursor:pointer}
+    @media (max-width:640px){#controls-hint{display:none}#hud-bar{font-size:8px;gap:6px}}
   </style>
 </head>
 <body>
-  <div id="hdr">THE HEIST · STEALTH · Avoid IDS cones · Rule: failed_auth &gt; 3 triggers alert</div>
+  <div id="game-shell">
+    <div id="hud-bar">
+      <span class="lvl" id="hud-level">LVL 1</span>
+      <span class="zone" id="hud-zone">PERIMETER</span>
+      <span class="obj" id="hud-objectives">EXFIL 0/6 · NEED 4</span>
+      <span class="alarm" id="hud-alarm">ALARM</span>
+      <button id="audio-toggle" type="button" title="Ambient audio (Tone.js)">AUDIO OFF</button>
+      <div id="noise-wrap"><span>NOISE</span><div id="noise-bar"><div id="noise-fill"></div></div></div>
+      <span id="controls-hint">WASD · E interact · H patrol · 1/2 levels · Shift sprint</span>
+    </div>
+    <div id="canvas-host">
+      <div id="level-select">
+        <button class="lvl-btn active" data-lvl="0" type="button">L1 Perimeter</button>
+        <button class="lvl-btn" data-lvl="1" type="button">L2 Core Run</button>
+      </div>
+      <div id="status-toast"></div>
+      <div id="interact-prompt"></div>
+      <div id="copy-bar-wrap"><div id="copy-label">COPYING DATA…</div><div id="copy-bar"><div id="copy-fill"></div></div></div>
+      <div id="alarm-timer"></div>
+    </div>
+  </div>
+  <div id="overlay-screen">
+    <div id="overlay-panel">
+      <h2 id="overlay-title">DETECTED — INCIDENT CREATED</h2>
+      <div class="rule" id="overlay-rule"></div>
+      <div class="component" id="overlay-component"></div>
+      <p class="explain" id="overlay-explain"></p>
+      <a class="doc-link" id="overlay-doc" href="#" target="_blank" rel="noopener">Read detection documentation →</a>
+      <div class="overlay-btns">
+        <button class="overlay-btn primary" id="btn-replay" type="button">REPLAY (WITH KNOWLEDGE)</button>
+        <button class="overlay-btn" id="btn-rules" type="button">VIEW DETECTION RULES</button>
+      </div>
+    </div>
+  </div>
+  <div id="modal-screen">
+    <div id="modal-panel">
+      <h3 id="modal-title">TERMINAL</h3>
+      <p id="modal-desc"></p>
+      <div class="clue" id="modal-clue"></div>
+      <input id="modal-input" type="text" autocomplete="off" spellcheck="false" placeholder="Enter value…" />
+      <div id="modal-btns">
+        <button class="overlay-btn primary" id="modal-submit" type="button">SUBMIT</button>
+        <button class="overlay-btn" id="modal-cancel" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+  <div id="rules-panel">
+    <button id="rules-close" type="button" aria-label="Close">×</button>
+    <h4>DETECTION RULES IN PLAY</h4>
+    <div class="rule-block"><strong>rapid-requests</strong>Three perimeter checkpoints within 30 seconds triggers correlation alert. Pace zone transitions.</div>
+    <div class="rule-block"><strong>unusual-port</strong>Doors labeled 4444 or 8888 alarm unless you carry the port-scanner bypass tool from the network zone.</div>
+    <div class="rule-block"><strong>sensitive-path</strong>Admin-only floor tiles in the core light up the UEBA model without valid admin credentials.</div>
+    <div class="rule-block"><strong>brute-force</strong>Password terminals allow three failed attempts per 30-second window before failed_auth fires.</div>
+    <div class="rule-block"><strong>sql-injection</strong>Database terminal accepts injection strings; success logs a delayed alert after 45 seconds.</div>
+    <div class="rule-block"><strong>guard-vision</strong>60° cones, 5 tiles. 0.8s exposure fills detection bar. Backup converges on alert.</div>
+    <div class="rule-block"><strong>SOAR override</strong>During the 10-second pre-alarm window, hold SOAR terminal 4s to suppress escalation.</div>
+  </div>
+  <div id="mobile-msg">
+    <p id="mobile-msg-text">Touch controls enabled below. For best stealth precision, desktop keyboard is recommended.</p>
+    <button class="overlay-btn primary" id="mobile-continue" type="button">CONTINUE</button>
+  </div>
+  <div id="dpad">
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="up" type="button">▲</button>
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="left" type="button">◀</button>
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="right" type="button">▶</button>
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="down" type="button">▼</button>
+    <div class="dpad-btn empty"></div>
+  </div>
+  <div id="deck-nav-root"></div>
   <script src="assets/siem-core.js"></script>
   <script src="assets/palette.js"></script>
   <script>
-  (function(){
-    SiemCore.bootPage('heist'); SiemCore.AchievementSystem.check('visit_heist');
-    var k=kaboom({global:true,width:innerWidth,height:innerHeight-32,canvas:document.createElement('canvas'),background:[10,4,8]});
-    document.body.appendChild(document.querySelector('canvas'));
+  /*
+   * This file must be self-contained, fully implemented, and at minimum 600 lines of code.
+   * Do not produce a skeleton or placeholder. Every mechanic described must be functional.
+   * Do not stop early.
+   */
+  (function () {
+    'use strict';
+
+    SiemCore.bootPage('heist');
+    SiemCore.AchievementSystem.check('visit_heist');
+
+    var TILE = 16;
+    var SCALE = 3;
+    var TS = TILE * SCALE;
+    var MAP_W = 80;
+    var MAP_H = 60;
+    var VISION_RANGE = 5 * TS;
+    var VISION_ANGLE = 60 * (Math.PI / 180);
+    var DETECT_TIME = 0.8;
+    var ALARM_WINDOW = 10;
+    var COPY_TIME = 3;
+    var WIN_NEED = 4;
+    var TOTAL_OBJECTIVES = 6;
+
+    var T = {
+      WALL: 1,
+      PERIM: 2,
+      NET: 3,
+      CORE: 4,
+      SENS: 5,
+      CHK: 6,
+      WIRE: 7,
+      D443: 8,
+      D4444: 9,
+      D8888: 10,
+      EXIT: 11
+    };
+
+    var RULE_DOCS = {
+      'rapid-requests': {
+        title: 'Rule: rapid-requests — 847 requests in 60 seconds from your IP',
+        component: 'SIEM Component: Correlation Engine / Rate Analyzer',
+        explain: 'Perimeter checkpoints log every badge swipe and turnstile event. When three zone crossings occur inside a 30-second sliding window, the correlation engine assumes automated scanning or credential stuffing. The rule exists to catch reconnaissance bots before they reach internal VLANs.',
+        doc: 'read.html?doc=guides/rules/detection-basics'
+      },
+      'unusual-port': {
+        title: 'Rule: unusual-port — outbound connection to TCP/4444',
+        component: 'SIEM Component: Network IDS / Firewall Analytics',
+        explain: 'Production services use well-known ports like 443. Connections to 4444 or 8888 match historical C2 and reverse-shell patterns in your environment. Without an approved tunnel tool, the firewall sends a high-severity event to the Alert Manager.',
+        doc: 'read.html?doc=guides/ingest-config/log-ingestion/02-ingestion-pipeline-end-to-end'
+      },
+      'sensitive-path': {
+        title: 'Rule: sensitive-path — unauthorized access to /admin/core/detection',
+        component: 'SIEM Component: UEBA / File Integrity Monitor',
+        explain: 'Core-zone floor tiles map to privileged paths in the detection engine filesystem. Walking them without admin credentials violates least-privilege baselines. UEBA compares your session role against path sensitivity and raises an insider-threat alert.',
+        doc: 'read.html?doc=guides/investigate/event-graph'
+      },
+      'brute-force': {
+        title: 'Rule: brute-force — failed_auth > 3 in 30 seconds',
+        component: 'SIEM Component: Authentication Analytics',
+        explain: 'Password terminals feed auth logs in real time. Three failed attempts within thirty seconds matches the failed_auth threshold used across the fleet. This catches password spraying before a valid credential is found.',
+        doc: 'read.html?doc=guides/rules/detection-basics'
+      },
+      'sql-injection': {
+        title: 'Rule: sql-injection — suspicious query pattern in db_console',
+        component: 'SIEM Component: Detection Engine (delayed batch rule)',
+        explain: 'The database terminal accepts SQL-like input. A successful injection string is silently queued; the Detection Engine evaluates query logs on a 45-second delay to reduce false positives during maintenance windows. You must exfil and exit before the batch job fires.',
+        doc: 'read.html?doc=guides/investigate/event-graph'
+      },
+      'guard-vision': {
+        title: 'Rule: guard-vision — physical access anomaly in monitored sector',
+        component: 'SIEM Component: Alert Manager → SOAR Playbook',
+        explain: 'Guards represent integrated CCTV analytics. Sustained presence inside a vision cone fills a detection meter in 0.8 seconds. On alert, backup units converge and the Alert Manager begins a ten-second escalation timer toward full lockdown.',
+        doc: 'read.html?doc=guides/investigate/event-graph'
+      },
+      'tripwire': {
+        title: 'Rule: motion-tripwire — unexpected movement in air-gap corridor',
+        component: 'SIEM Component: Perimeter Motion Sensor Grid',
+        explain: 'Cyan tripwire tiles simulate laser grids in the perimeter. Crossing them spikes the noise floor and can combine with other rules. Slow, deliberate movement keeps the noise meter below analyst review thresholds.',
+        doc: 'read.html?doc=guides/rules/detection-basics'
+      },
+      'full-alarm': {
+        title: 'Rule: full-alarm — SOAR lockdown playbook executed',
+        component: 'SIEM Component: SOAR / Alert Manager',
+        explain: 'The ten-second pre-alarm window expired without a valid SOAR override. Automated playbooks isolate segments, flush sessions, and page on-call. At this stage evasion is no longer possible — the incident is fully materialized.',
+        doc: 'read.html?doc=guides/investigate/event-graph'
+      }
+    };
+
+    var LEVELS = [
+      { id: 0, name: 'LVL 1 · PERIMETER BREACH', short: 'Perimeter', start: { x: 4, y: 30 }, pw: 'delta2024', sql: "' OR 1=1--", sqlClue: 'Sticky note: OR 1=1 closes the WHERE clause.' },
+      { id: 1, name: 'LVL 2 · CORE INFILTRATION', short: 'Core Run', start: { x: 6, y: 52 }, pw: 'meridian', sql: "admin'--", sqlClue: 'Whiteboard: admin comment bypass on auth table.' }
+    ];
+
+    var host = document.getElementById('canvas-host');
+    var hudLevel = document.getElementById('hud-level');
+    var hudZone = document.getElementById('hud-zone');
+    var hudObj = document.getElementById('hud-objectives');
+    var hudAlarm = document.getElementById('hud-alarm');
+    var noiseFill = document.getElementById('noise-fill');
+    var statusToast = document.getElementById('status-toast');
+    var interactPrompt = document.getElementById('interact-prompt');
+    var copyWrap = document.getElementById('copy-bar-wrap');
+    var copyFill = document.getElementById('copy-fill');
+    var alarmTimerEl = document.getElementById('alarm-timer');
+    var overlayScreen = document.getElementById('overlay-screen');
+    var overlayPanel = document.getElementById('overlay-panel');
+    var modalScreen = document.getElementById('modal-screen');
+    var rulesPanel = document.getElementById('rules-panel');
+    var dpad = document.getElementById('dpad');
+    var mobileMsg = document.getElementById('mobile-msg');
+
+    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0 && innerWidth < 900);
+    var touchKeys = { up: false, down: false, left: false, right: false, sprint: false };
+    var audioEnabled = false;
+    var toneReady = false;
+    var toneSynth = null;
+
+    function loadToneOptional(cb) {
+      if (typeof Tone !== 'undefined') { cb(); return; }
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js';
+      s.onload = cb;
+      document.head.appendChild(s);
+    }
+
+    document.getElementById('audio-toggle').addEventListener('click', function () {
+      loadToneOptional(function () {
+        if (typeof Tone === 'undefined') return;
+        Tone.start().then(function () {
+          audioEnabled = !audioEnabled;
+          toneReady = audioEnabled;
+          var btn = document.getElementById('audio-toggle');
+          btn.textContent = audioEnabled ? 'AUDIO ON' : 'AUDIO OFF';
+          btn.classList.toggle('on', audioEnabled);
+          if (audioEnabled && !toneSynth) {
+            toneSynth = new Tone.PolySynth(Tone.Synth, { volume: -22 }).toDestination();
+          }
+        });
+      });
+    });
+
+    function playTone(note, dur) {
+      if (!audioEnabled || !toneReady || !toneSynth) return;
+      try { toneSynth.triggerAttackRelease(note, dur || '8n'); } catch (_) { /* ignore */ }
+    }
+
+    if (isTouch) {
+      mobileMsg.classList.add('show');
+      document.getElementById('mobile-continue').onclick = function () { mobileMsg.classList.remove('show'); dpad.classList.add('show'); };
+      dpad.querySelectorAll('.dpad-btn[data-dir]').forEach(function (btn) {
+        var dir = btn.getAttribute('data-dir');
+        btn.addEventListener('touchstart', function (e) { e.preventDefault(); touchKeys[dir] = true; });
+        btn.addEventListener('touchend', function () { touchKeys[dir] = false; });
+        btn.addEventListener('mousedown', function () { touchKeys[dir] = true; });
+        btn.addEventListener('mouseup', function () { touchKeys[dir] = false; });
+      });
+    }
+
+    var state = {
+      levelIdx: 0,
+      map: null,
+      entities: null,
+      guards: [],
+      cameras: [],
+      objectives: [],
+      items: {},
+      doors: [],
+      terminals: [],
+      soarPos: null,
+      exitPos: null,
+      player: null,
+      copied: {},
+      copyProgress: 0,
+      copyTarget: null,
+      checkpointTimes: [],
+      pwAttempts: [],
+      hasAdmin: false,
+      hasTool: false,
+      hasSocial: false,
+      noise: 0,
+      paused: false,
+      gameOver: false,
+      won: false,
+      showPatrol: false,
+      alarmCountdown: null,
+      sqlDelayed: null,
+      guardAlerted: false,
+      backupActive: false,
+      modalType: null,
+      toastTimer: null,
+      lastZone: 'PERIMETER'
+    };
+
+    function toast(msg, ms) {
+      statusToast.textContent = msg;
+      statusToast.classList.add('show');
+      clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(function () { statusToast.classList.remove('show'); }, ms || 2200);
+    }
+
+    function tileAt(map, tx, ty) {
+      if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) return T.WALL;
+      return map[ty][tx];
+    }
+
+    function isSolid(t) {
+      return t === T.WALL || t === T.D443 || t === T.D4444 || t === T.D8888;
+    }
+
+    function zoneNameForTile(t) {
+      if (t === T.PERIM || t === T.CHK || t === T.WIRE) return 'PERIMETER';
+      if (t === T.NET) return 'NETWORK';
+      if (t === T.CORE || t === T.SENS) return 'CORE';
+      return 'UNKNOWN';
+    }
+
+    function worldToTile(x, y) {
+      return { tx: Math.floor(x / TS), ty: Math.floor(y / TS) };
+    }
+
+    function buildMap(levelIdx) {
+      var y, x, map = [];
+      for (y = 0; y < MAP_H; y++) {
+        map[y] = [];
+        for (x = 0; x < MAP_W; x++) map[y][x] = T.WALL;
+      }
+      for (y = 1; y < MAP_H - 1; y++) {
+        for (x = 1; x < MAP_W - 1; x++) {
+          if (x <= 10 || y <= 10 || x >= MAP_W - 11 || y >= MAP_H - 11) map[y][x] = T.PERIM;
+          else if (x <= 28 || y <= 28 || x >= MAP_W - 29 || y >= MAP_H - 29) map[y][x] = T.NET;
+          else map[y][x] = T.CORE;
+        }
+      }
+      carveRect(map, 2, 28, 8, 5, T.PERIM);
+      carveRect(map, MAP_W - 10, 28, 8, 5, T.PERIM);
+      carveRect(map, 36, 2, 8, 6, T.PERIM);
+      carveRect(map, 36, MAP_H - 8, 8, 6, T.PERIM);
+      if (levelIdx === 0) {
+        carveRect(map, 18, 26, 44, 8, T.NET);
+        carveRect(map, 34, 18, 12, 24, T.CORE);
+        placeDoor(map, 40, 26, T.D443);
+        placeDoor(map, 30, 30, T.D4444);
+        placeDoor(map, 50, 30, T.D8888);
+        for (x = 35; x <= 45; x++) map[22][x] = T.CHK;
+        for (x = 38; x < 42; x++) map[40][x] = T.WIRE;
+      } else {
+        carveRect(map, 14, 22, 52, 16, T.NET);
+        carveRect(map, 30, 14, 20, 32, T.CORE);
+        placeDoor(map, 28, 30, T.D443);
+        placeDoor(map, 22, 34, T.D4444);
+        placeDoor(map, 56, 28, T.D8888);
+        for (x = 20; x <= 24; x++) map[30][x] = T.CHK;
+        for (x = 50; x <= 54; x++) map[30][x] = T.CHK;
+        for (x = 40; x <= 44; x++) map[18][x] = T.CHK;
+        for (x = 32; x <= 48; x++) if (x % 2 === 0) map[24][x] = T.SENS;
+        for (x = 34; x <= 46; x++) map[36][x] = T.WIRE;
+      }
+      map[LEVELS[levelIdx].start.y][LEVELS[levelIdx].start.x] = T.PERIM;
+      var ex = levelIdx === 0 ? { x: MAP_W - 4, y: 30 } : { x: MAP_W - 4, y: 8 };
+      map[ex.y][ex.x] = T.EXIT;
+      return { map: map, exit: ex };
+    }
+
+    function carveRect(map, x, y, w, h, tile) {
+      var dx, dy;
+      for (dy = y; dy < y + h; dy++) for (dx = x; dx < x + w; dx++) if (dy > 0 && dy < MAP_H - 1 && dx > 0 && dx < MAP_W - 1) map[dy][dx] = tile;
+    }
+
+    function placeDoor(map, x, y, doorTile) {
+      map[y][x] = doorTile;
+      if (map[y][x - 1] === T.WALL) map[y][x - 1] = map[y][x + 1] === T.WALL ? T.NET : map[y][x - 1];
+      if (map[y][x + 1] === T.WALL) map[y][x + 1] = T.NET;
+    }
+
+    function buildEntities(levelIdx, exitPos) {
+      var objs = [];
+      var guards = [];
+      var cams = [];
+      var items = {};
+      var terminals = [];
+      var doors = [];
+      var i, positions;
+
+      if (levelIdx === 0) {
+        positions = [{ x: 22, y: 29 }, { x: 45, y: 29 }, { x: 38, y: 20 }, { x: 42, y: 38 }, { x: 24, y: 35 }, { x: 52, y: 22 }];
+        guards.push(makeGuard([{ x: 16, y: 28 }, { x: 24, y: 28 }, { x: 24, y: 32 }, { x: 16, y: 32 }], 0));
+        guards.push(makeGuard([{ x: 46, y: 26 }, { x: 52, y: 26 }, { x: 52, y: 32 }, { x: 46, y: 32 }], Math.PI));
+        cams.push({ x: 40, y: 10, angle: Math.PI / 2, range: VISION_RANGE });
+        items.admin = { x: 48, y: 34, taken: false };
+        items.tool = { x: 20, y: 32, taken: false };
+        items.social = { x: 44, y: 24, taken: false };
+        doors.push({ x: 40, y: 26, port: 443, open: true });
+        doors.push({ x: 30, y: 30, port: 4444, open: false });
+        doors.push({ x: 50, y: 30, port: 8888, open: false });
+        terminals.push({ x: 36, y: 32, kind: 'password' });
+        terminals.push({ x: 40, y: 34, kind: 'sql' });
+      } else {
+        positions = [{ x: 18, y: 28 }, { x: 28, y: 26 }, { x: 38, y: 22 }, { x: 42, y: 30 }, { x: 48, y: 36 }, { x: 34, y: 38 }];
+        guards.push(makeGuard([{ x: 32, y: 18 }, { x: 38, y: 18 }, { x: 38, y: 22 }, { x: 32, y: 22 }], -Math.PI / 2));
+        guards.push(makeGuard([{ x: 44, y: 28 }, { x: 50, y: 28 }, { x: 50, y: 34 }, { x: 44, y: 34 }], Math.PI / 4));
+        guards.push(makeGuard([{ x: 26, y: 36 }, { x: 30, y: 40 }, { x: 34, y: 36 }], Math.PI));
+        cams.push({ x: 12, y: 30, angle: 0, range: VISION_RANGE });
+        cams.push({ x: 58, y: 24, angle: Math.PI, range: VISION_RANGE });
+        items.admin = { x: 46, y: 20, taken: false };
+        items.tool = { x: 16, y: 26, taken: false };
+        items.social = { x: 54, y: 32, taken: false };
+        doors.push({ x: 28, y: 30, port: 443, open: true });
+        doors.push({ x: 22, y: 34, port: 4444, open: false });
+        doors.push({ x: 56, y: 28, port: 8888, open: false });
+        terminals.push({ x: 36, y: 28, kind: 'password' });
+        terminals.push({ x: 40, y: 32, kind: 'sql' });
+      }
+
+      for (i = 0; i < TOTAL_OBJECTIVES; i++) {
+        objs.push({ id: 'node_' + levelIdx + '_' + i, x: positions[i].x, y: positions[i].y, done: false });
+      }
+
+      return {
+        objectives: objs,
+        guards: guards,
+        cameras: cams,
+        items: items,
+        terminals: terminals,
+        doors: doors,
+        soar: { x: levelIdx === 0 ? 38 : 42, y: levelIdx === 0 ? 36 : 40 },
+        exit: exitPos
+      };
+    }
+
+    function makeGuard(waypoints, startAngle) {
+      return {
+        waypoints: waypoints,
+        wpIdx: 0,
+        x: waypoints[0].x * TS + TS / 2,
+        y: waypoints[0].y * TS + TS / 2,
+        angle: startAngle || 0,
+        speed: 42,
+        detect: 0,
+        alerted: false,
+        backup: false
+      };
+    }
+
+    function triggerDetection(ruleKey) {
+      if (state.gameOver || state.paused) return;
+      state.gameOver = true;
+      state.paused = true;
+      playTone('C3', '2n');
+      var info = RULE_DOCS[ruleKey] || RULE_DOCS['guard-vision'];
+      document.getElementById('overlay-title').textContent = 'DETECTED — INCIDENT CREATED';
+      document.getElementById('overlay-rule').textContent = info.title;
+      document.getElementById('overlay-component').textContent = info.component;
+      document.getElementById('overlay-explain').textContent = info.explain;
+      var doc = document.getElementById('overlay-doc');
+      doc.href = info.doc;
+      doc.textContent = 'Read: ' + info.doc.replace('read.html?doc=', '') + ' →';
+      overlayPanel.classList.remove('win');
+      overlayScreen.classList.add('show');
+      hudAlarm.classList.add('on');
+    }
+
+    function triggerWin() {
+      if (state.won) return;
+      state.won = true;
+      state.gameOver = true;
+      state.paused = true;
+      playTone('E5', '4n');
+      SiemCore.AchievementSystem.check('heist_win');
+      document.getElementById('overlay-title').textContent = 'EXFIL COMPLETE — UNDetected EXIT';
+      document.getElementById('overlay-rule').textContent = 'Objectives secured: ' + Object.keys(state.copied).length + ' / ' + TOTAL_OBJECTIVES;
+      document.getElementById('overlay-component').textContent = 'SIEM Component: None triggered (this time)';
+      document.getElementById('overlay-explain').textContent = 'You copied enough DATA_EXFIL nodes and reached the perimeter exit before correlation, UEBA, or SOAR playbooks materialized a case. The same tactics fail when analysts tune thresholds — revisit the docs linked from each death screen.';
+      document.getElementById('overlay-doc').href = 'read.html?doc=guides/rules/detection-basics';
+      document.getElementById('overlay-doc').textContent = 'Read: guides/rules/detection-basics →';
+      overlayPanel.classList.add('win');
+      overlayScreen.classList.add('show');
+    }
+
+    document.getElementById('btn-replay').onclick = function () { location.reload(); };
+    document.getElementById('btn-rules').onclick = function () { rulesPanel.classList.add('open'); overlayScreen.classList.remove('show'); state.paused = false; state.gameOver = false; };
+    document.getElementById('rules-close').onclick = function () { rulesPanel.classList.remove('open'); };
+
+    function openModal(type) {
+      state.modalType = type;
+      state.paused = true;
+      var lvl = LEVELS[state.levelIdx];
+      var title = document.getElementById('modal-title');
+      var desc = document.getElementById('modal-desc');
+      var clue = document.getElementById('modal-clue');
+      var input = document.getElementById('modal-input');
+      input.value = '';
+      if (type === 'password') {
+        title.textContent = 'AUTH TERMINAL — ENTER PASSWORD';
+        desc.textContent = 'Three wrong attempts within 30 seconds triggers brute-force / failed_auth.';
+        clue.textContent = state.hasSocial ? 'Social engineering kit: password is "' + lvl.pw + '".' : 'Sticky note nearby: "season + year, lowercase"';
+      } else {
+        title.textContent = 'DATABASE TERMINAL — INJECTION STRING';
+        desc.textContent = 'Correct injection succeeds but fires sql-injection rule after 45 seconds.';
+        clue.textContent = lvl.sqlClue;
+      }
+      modalScreen.classList.add('show');
+      setTimeout(function () { input.focus(); }, 50);
+    }
+
+    function closeModal() {
+      modalScreen.classList.remove('show');
+      state.modalType = null;
+      state.paused = false;
+    }
+
+    document.getElementById('modal-cancel').onclick = closeModal;
+    document.getElementById('modal-submit').onclick = function () {
+      var val = document.getElementById('modal-input').value.trim();
+      var lvl = LEVELS[state.levelIdx];
+      if (state.modalType === 'password') {
+        var now = Date.now();
+        state.pwAttempts = state.pwAttempts.filter(function (t) { return now - t < 30000; });
+        if (val === lvl.pw || (state.hasSocial && val.length > 0)) {
+          toast('Terminal unlocked — credentials accepted');
+          closeModal();
+          playTone('G4', '8n');
+        } else {
+          state.pwAttempts.push(now);
+          toast('ACCESS DENIED (' + state.pwAttempts.length + '/3)', 1200);
+          playTone('A2', '16n');
+          if (state.pwAttempts.length >= 3) {
+            closeModal();
+            triggerDetection('brute-force');
+          }
+        }
+      } else if (state.modalType === 'sql') {
+        if (val === lvl.sql || val.replace(/\s/g, '') === lvl.sql.replace(/\s/g, '')) {
+          toast('Injection accepted — delayed alert in 45s');
+          closeModal();
+          if (state.sqlDelayed) clearTimeout(state.sqlDelayed);
+          state.sqlDelayed = setTimeout(function () {
+            if (!state.gameOver && !state.won) triggerDetection('sql-injection');
+          }, 45000);
+          playTone('F4', '8n');
+        } else {
+          toast('Syntax rejected — try clues on the map');
+        }
+      }
+    };
+
+    document.querySelectorAll('.lvl-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var idx = parseInt(btn.getAttribute('data-lvl'), 10);
+        if (idx === state.levelIdx) return;
+        document.querySelectorAll('.lvl-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        startLevel(idx);
+      });
+    });
+
+    var k = kaboom({
+      global: true,
+      width: host.clientWidth,
+      height: host.clientHeight,
+      root: host,
+      background: [10, 13, 26],
+      pixelDensity: 1,
+      crisp: true
+    });
+
     setGravity(0);
-    var player=add([rect(16,16),pos(40,innerHeight/2),color(56,189,248),area(),'player']);
-    var guard=add([rect(20,20),pos(innerWidth-120,innerHeight/2),color(248,113,113),area(),'guard']);
-    var vault=add([rect(40,60),pos(innerWidth-60,innerHeight/2-30),color(251,191,36),area(),'vault']);
-    var cone=add([polygon([vec2(0,0),vec2(80,40),vec2(80,-40)]),pos(innerWidth-120,innerHeight/2),color(248,113,113),opacity(0.15),rotate(0),'cone']);
-    add([text('Reach vault without entering IDS cone',{size:12}),pos(12,40),color(148,163,184)]);
-    var coneAngle=0,detected=false,failedAuth=0;
-    onUpdate(function(){
-      coneAngle+=dt()*0.8;cone.angle=coneAngle*30;
-      var px=player.pos.x,py=player.pos.y,gx=guard.pos.x,gy=guard.pos.y;
-      var dx=px-gx,dy=py-gy,dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<90&&!detected){
-        failedAuth++;
-        if(failedAuth>3){
-          detected=true;
-          add([text('DETECTED — Rule: failed_auth > 3',{size:14}),pos(innerWidth/2-180,innerHeight/2-40),color(248,113,113),fixed()]);
-          add([text('Read: read.html?doc=guides/investigate/event-graph',{size:11}),pos(innerWidth/2-200,innerHeight/2),color(148,163,184),fixed()]);
-          add([text('Read: read.html?doc=guides/rules/detection-basics',{size:11}),pos(innerWidth/2-200,innerHeight/2+24),color(148,163,184),fixed()]);
-          wait(4,function(){go('heist.html');});
+
+    var playerTrail = [];
+
+    function startLevel(idx) {
+      destroyAll('player');
+      destroyAll('guard-marker');
+      state.levelIdx = idx;
+      state.copied = {};
+      state.copyProgress = 0;
+      state.copyTarget = null;
+      state.checkpointTimes = [];
+      state.pwAttempts = [];
+      state.hasAdmin = false;
+      state.hasTool = false;
+      state.hasSocial = false;
+      state.noise = 0;
+      state.paused = false;
+      state.gameOver = false;
+      state.won = false;
+      state.showPatrol = false;
+      state.alarmCountdown = null;
+      state.guardAlerted = false;
+      state.backupActive = false;
+      if (state.sqlDelayed) { clearTimeout(state.sqlDelayed); state.sqlDelayed = null; }
+      hudAlarm.classList.remove('on');
+      alarmTimerEl.classList.remove('show');
+      overlayScreen.classList.remove('show');
+
+      var built = buildMap(idx);
+      state.map = built.map;
+      state.entities = buildEntities(idx, built.exit);
+      state.guards = state.entities.guards;
+      state.cameras = state.entities.cameras;
+      state.objectives = state.entities.objectives;
+      state.items = state.entities.items;
+      state.terminals = state.entities.terminals;
+      state.doors = state.entities.doors;
+      state.soarPos = state.entities.soar;
+      state.exitPos = state.entities.exit;
+
+      var st = LEVELS[idx].start;
+      state.player = add([
+        rect(TS * 0.55, TS * 0.55),
+        pos(st.x * TS + TS / 2, st.y * TS + TS / 2),
+        color(0, 255, 136),
+        area({ width: TS * 0.5, height: TS * 0.5 }),
+        anchor('center'),
+        'player',
+        { vx: 0, vy: 0 }
+      ]);
+
+      hudLevel.textContent = LEVELS[idx].name;
+      updateHud();
+      camPos(state.player.pos);
+      toast('Infiltrate · copy ' + WIN_NEED + '+ nodes · reach EXIT');
+    }
+
+    function updateHud() {
+      var n = Object.keys(state.copied).length;
+      hudObj.textContent = 'EXFIL ' + n + '/' + TOTAL_OBJECTIVES + ' · NEED ' + WIN_NEED;
+      noiseFill.style.width = Math.min(100, state.noise) + '%';
+    }
+
+    function tileColor(t, tx, ty) {
+      var flick = (tx + ty) % 2;
+      if (t === T.WALL) return rgb(15, 20, 38);
+      if (t === T.PERIM) return flick ? rgb(18, 28, 42) : rgb(16, 26, 40);
+      if (t === T.NET) return flick ? rgb(20, 32, 48) : rgb(18, 30, 46);
+      if (t === T.CORE) return flick ? rgb(24, 18, 36) : rgb(22, 16, 34);
+      if (t === T.SENS) return rgb(48, 28, 36);
+      if (t === T.CHK) return rgb(28, 36, 28);
+      if (t === T.WIRE) return rgb(12, 40, 44);
+      if (t === T.D443) return rgb(0, 80, 120);
+      if (t === T.D4444 || t === T.D8888) return rgb(80, 20, 40);
+      if (t === T.EXIT) return rgb(0, 180, 140);
+      return rgb(30, 30, 30);
+    }
+
+    function drawPixelTile(x, y, t, tx, ty) {
+      drawRect({ pos: vec2(x, y), width: TS, height: TS, color: tileColor(t, tx, ty) });
+      if (t === T.WALL) {
+        drawRect({ pos: vec2(x + 4, y + 4), width: TS - 8, height: TS - 8, color: rgb(8, 10, 20) });
+      }
+      if (t === T.D443) {
+        drawText({ text: '443', size: 10, pos: vec2(x + 10, y + 16), color: rgb(0, 212, 255) });
+      }
+      if (t === T.D4444) {
+        drawText({ text: '4444', size: 9, pos: vec2(x + 4, y + 16), color: rgb(255, 45, 85) });
+      }
+      if (t === T.D8888) {
+        drawText({ text: '8888', size: 9, pos: vec2(x + 4, y + 16), color: rgb(255, 45, 85) });
+      }
+      if (t === T.EXIT) {
+        drawText({ text: 'EXIT', size: 10, pos: vec2(x + 8, y + 16), color: rgb(0, 255, 136) });
+      }
+      if (t === T.SENS) {
+        drawRect({ pos: vec2(x + 8, y + 8), width: TS - 16, height: TS - 16, color: rgb(90, 40, 50), opacity: 0.35 });
+      }
+    }
+
+    function drawVisionCone(cx, cy, angle, range, col, alpha) {
+      var half = VISION_ANGLE / 2;
+      var a1 = angle - half;
+      var a2 = angle + half;
+      var p0 = vec2(cx, cy);
+      var p1 = vec2(cx + Math.cos(a1) * range, cy + Math.sin(a1) * range);
+      var p2 = vec2(cx + Math.cos(a2) * range, cy + Math.sin(a2) * range);
+      drawTriangle({ p1: p0, p2: p1, p3: p2, color: col, opacity: alpha || 0.18 });
+    }
+
+    function pointInCone(px, py, cx, cy, angle, range) {
+      var dx = px - cx;
+      var dy = py - cy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > range) return false;
+      var a = Math.atan2(dy, dx);
+      var diff = Math.atan2(Math.sin(a - angle), Math.cos(a - angle));
+      return Math.abs(diff) <= VISION_ANGLE / 2;
+    }
+
+    function canWalk(px, py) {
+      var t = worldToTile(px, py);
+      var tile = tileAt(state.map, t.tx, t.ty);
+      if (tile === T.WALL) return false;
+      if (tile === T.D4444 || tile === T.D8888) {
+        if (!state.hasTool) return false;
+        state.map[t.ty][t.tx] = T.NET;
+        toast('Port tunnel established via ' + (tile === T.D4444 ? '4444' : '8888'));
+        return true;
+      }
+      return true;
+    }
+
+    function tryEnterDoor(px, py) {
+      var t = worldToTile(px, py);
+      var tile = tileAt(state.map, t.tx, t.ty);
+      if ((tile === T.D4444 || tile === T.D8888) && !state.hasTool) {
+        triggerDetection('unusual-port');
+        return false;
+      }
+      return true;
+    }
+
+    function registerCheckpoint(tx, ty) {
+      if (tileAt(state.map, tx, ty) !== T.CHK) return;
+      var now = Date.now();
+      state.checkpointTimes.push(now);
+      state.checkpointTimes = state.checkpointTimes.filter(function (t) { return now - t < 30000; });
+      if (state.checkpointTimes.length >= 3) triggerDetection('rapid-requests');
+    }
+
+    function checkSensitive(tx, ty) {
+      if (tileAt(state.map, tx, ty) !== T.SENS) return;
+      if (!state.hasAdmin) triggerDetection('sensitive-path');
+    }
+
+    function checkTripwire(tx, ty) {
+      if (tileAt(state.map, tx, ty) !== T.WIRE) return;
+      state.noise = Math.min(100, state.noise + 18);
+    }
+
+    onDraw(function () {
+      if (!state.map || !state.player) return;
+      var c = camPos();
+      var vw = width();
+      var vh = height();
+      var x0 = Math.max(0, Math.floor((c.x - vw / 2) / TS) - 1);
+      var y0 = Math.max(0, Math.floor((c.y - vh / 2) / TS) - 1);
+      var x1 = Math.min(MAP_W - 1, Math.ceil((c.x + vw / 2) / TS) + 1);
+      var y1 = Math.min(MAP_H - 1, Math.ceil((c.y + vh / 2) / TS) + 1);
+      var tx, ty, wx, wy;
+      for (ty = y0; ty <= y1; ty++) {
+        for (tx = x0; tx <= x1; tx++) {
+          wx = tx * TS;
+          wy = ty * TS;
+          drawPixelTile(wx, wy, state.map[ty][tx], tx, ty);
+        }
+      }
+
+      if (state.showPatrol) {
+        state.guards.forEach(function (g) {
+          var i;
+          for (i = 0; i < g.waypoints.length; i++) {
+            var a = g.waypoints[i];
+            var b = g.waypoints[(i + 1) % g.waypoints.length];
+            drawLine({
+              p1: vec2(a.x * TS + TS / 2, a.y * TS + TS / 2),
+              p2: vec2(b.x * TS + TS / 2, b.y * TS + TS / 2),
+              width: 2,
+              color: rgb(100, 116, 139),
+              opacity: 0.45
+            });
+          }
+        });
+      }
+
+      state.cameras.forEach(function (cam) {
+        drawVisionCone(cam.x * TS + TS / 2, cam.y * TS + TS / 2, cam.angle, cam.range, rgb(255, 45, 85), 0.12);
+        drawRect({ pos: vec2(cam.x * TS + 4, cam.y * TS + 4), width: TS - 8, height: TS - 8, color: rgb(255, 45, 85) });
+      });
+
+      state.objectives.forEach(function (o) {
+        if (o.done) return;
+        var ox = o.x * TS + TS / 2;
+        var oy = o.y * TS + TS / 2;
+        drawRect({ pos: vec2(ox - 10, oy - 10), width: 20, height: 20, color: rgb(255, 214, 10) });
+        drawText({ text: 'DATA', size: 8, pos: vec2(ox - 14, oy - 4), color: rgb(10, 13, 26) });
+      });
+
+      ['admin', 'tool', 'social'].forEach(function (key) {
+        var it = state.items[key];
+        if (!it || it.taken) return;
+        drawRect({ pos: vec2(it.x * TS + 8, it.y * TS + 8), width: TS - 16, height: TS - 16, color: rgb(0, 212, 255) });
+        drawText({ text: key.substr(0, 4).toUpperCase(), size: 7, pos: vec2(it.x * TS + 6, it.y * TS + 18), color: rgb(200, 240, 255) });
+      });
+
+      drawRect({ pos: vec2(state.soarPos.x * TS + 6, state.soarPos.y * TS + 6), width: TS - 12, height: TS - 12, color: rgb(99, 102, 241) });
+      drawText({ text: 'SOAR', size: 8, pos: vec2(state.soarPos.x * TS + 8, state.soarPos.y * TS + 18), color: rgb(220, 220, 255) });
+
+      state.guards.forEach(function (g) {
+        drawVisionCone(g.x, g.y, g.angle, VISION_RANGE, rgb(255, 45, 85), g.alerted ? 0.28 : 0.16);
+        drawRect({ pos: vec2(g.x - 12, g.y - 12), width: 24, height: 24, color: rgb(255, 45, 85) });
+        if (g.detect > 0 && g.detect < 1) {
+          drawRect({ pos: vec2(g.x - 18, g.y - 22), width: 36, height: 5, color: rgb(30, 30, 30) });
+          drawRect({ pos: vec2(g.x - 18, g.y - 22), width: 36 * g.detect, height: 5, color: rgb(255, 214, 10) });
+        }
+      });
+
+      playerTrail.forEach(function (p, i) {
+        drawRect({ pos: vec2(p.x - 3, p.y - 3), width: 6, height: 6, color: rgb(0, 255, 136), opacity: 0.15 + i * 0.04 });
+      });
+    });
+
+    var interactHold = 0;
+    var interactKind = null;
+
+    onKeyPress('e', function () {
+      if (!state.player || state.paused || state.gameOver) return;
+      var p = state.player;
+      var nearDist = TS * 1.2;
+      ['admin', 'tool', 'social'].forEach(function (key) {
+        var it = state.items[key];
+        if (!it || it.taken) return;
+        var d = Math.hypot(p.pos.x - (it.x * TS + TS / 2), p.pos.y - (it.y * TS + TS / 2));
+        if (d < nearDist) {
+          it.taken = true;
+          if (key === 'admin') { state.hasAdmin = true; toast('Admin credentials acquired'); }
+          if (key === 'tool') { state.hasTool = true; toast('Port scanner tool acquired'); }
+          if (key === 'social') { state.hasSocial = true; toast('Social engineering kit acquired'); }
+          playTone('D4', '8n');
+        }
+      });
+    });
+
+    onUpdate(function () {
+      if (!state.player || state.paused || state.gameOver) return;
+      var p = state.player;
+      var sprint = keyIsDown('shift') || touchKeys.sprint;
+      var spd = sprint ? 155 : 95;
+      var mx = 0;
+      var my = 0;
+      if (keyIsDown('left') || keyIsDown('a') || touchKeys.left) mx -= 1;
+      if (keyIsDown('right') || keyIsDown('d') || touchKeys.right) mx += 1;
+      if (keyIsDown('up') || keyIsDown('w') || touchKeys.up) my -= 1;
+      if (keyIsDown('down') || keyIsDown('s') || touchKeys.down) my += 1;
+      if (mx !== 0 || my !== 0) {
+        var len = Math.sqrt(mx * mx + my * my) || 1;
+        mx /= len;
+        my /= len;
+        var nx = p.pos.x + mx * spd * dt();
+        var ny = p.pos.y + my * spd * dt();
+        if (canWalk(nx, p.pos.y)) p.pos.x = nx;
+        else tryEnterDoor(nx, p.pos.y);
+        if (canWalk(p.pos.x, ny)) p.pos.y = ny;
+        else tryEnterDoor(p.pos.x, ny);
+        state.noise = Math.min(100, state.noise + (sprint ? 0.35 : 0.12));
+        playerTrail.push({ x: p.pos.x, y: p.pos.y });
+        if (playerTrail.length > 8) playerTrail.shift();
+      } else {
+        state.noise = Math.max(0, state.noise - 0.25);
+      }
+
+      camPos(p.pos);
+      var tt = worldToTile(p.pos.x, p.pos.y);
+      registerCheckpoint(tt.tx, tt.ty);
+      checkSensitive(tt.tx, tt.ty);
+      checkTripwire(tt.tx, tt.ty);
+      var zn = zoneNameForTile(tileAt(state.map, tt.tx, tt.ty));
+      if (zn !== state.lastZone) {
+        state.lastZone = zn;
+        hudZone.textContent = zn;
+      }
+      updateHud();
+
+      var seen = false;
+      state.guards.forEach(function (g) {
+        if (pointInCone(p.pos.x, p.pos.y, g.x, g.y, g.angle, VISION_RANGE)) seen = true;
+      });
+      state.cameras.forEach(function (c) {
+        if (pointInCone(p.pos.x, p.pos.y, c.x * TS + TS / 2, c.y * TS + TS / 2, c.angle, c.range)) seen = true;
+      });
+
+      state.guards.forEach(function (g) {
+        if (g.backup) {
+          var bdx = p.pos.x - g.x;
+          var bdy = p.pos.y - g.y;
+          var bl = Math.sqrt(bdx * bdx + bdy * bdy) || 1;
+          g.x += (bdx / bl) * 70 * dt();
+          g.y += (bdy / bl) * 70 * dt();
+          g.angle = Math.atan2(bdy, bdx);
+          if (bl < TS * 0.6) triggerDetection('guard-vision');
+          return;
+        }
+        var wp = g.waypoints[g.wpIdx];
+        var tx = wp.x * TS + TS / 2;
+        var ty = wp.y * TS + TS / 2;
+        var dx = tx - g.x;
+        var dy = ty - g.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 4) {
+          g.wpIdx = (g.wpIdx + 1) % g.waypoints.length;
+        } else {
+          g.x += (dx / dist) * g.speed * dt();
+          g.y += (dy / dist) * g.speed * dt();
+          g.angle = Math.atan2(dy, dx);
+        }
+        if (pointInCone(p.pos.x, p.pos.y, g.x, g.y, g.angle, VISION_RANGE)) {
+          g.detect = Math.min(1, g.detect + dt() / DETECT_TIME);
+          if (g.detect >= 1 && !g.alerted) {
+            g.alerted = true;
+            state.guardAlerted = true;
+            if (!state.backupActive) {
+              state.backupActive = true;
+              var bg = makeGuard([{ x: Math.floor(p.pos.x / TS), y: Math.floor(p.pos.y / TS) }], 0);
+              bg.backup = true;
+              bg.x = p.pos.x + TS * 2;
+              bg.y = p.pos.y;
+              state.guards.push(bg);
+            }
+            if (state.alarmCountdown === null) {
+              state.alarmCountdown = ALARM_WINDOW;
+              toast('GUARD ALERT — 10s to SOAR override or exit');
+              playTone('B2', '4n');
+            }
+          }
+        } else {
+          g.detect = Math.max(0, g.detect - dt() * 0.5);
+        }
+      });
+
+      if (state.alarmCountdown !== null) {
+        state.alarmCountdown -= dt();
+        alarmTimerEl.textContent = 'ESCALATION IN ' + Math.max(0, state.alarmCountdown).toFixed(1) + 's — SOAR OVERRIDE [E]';
+        alarmTimerEl.classList.add('show');
+        hudAlarm.classList.add('on');
+        if (state.alarmCountdown <= 0) triggerDetection('full-alarm');
+      }
+
+      var nearObj = null;
+      var nearDist = TS * 1.2;
+      state.objectives.forEach(function (o) {
+        if (o.done) return;
+        var d = Math.hypot(p.pos.x - (o.x * TS + TS / 2), p.pos.y - (o.y * TS + TS / 2));
+        if (d < nearDist) nearObj = o;
+      });
+
+      var nearTerminal = null;
+      state.terminals.forEach(function (t) {
+        var d = Math.hypot(p.pos.x - (t.x * TS + TS / 2), p.pos.y - (t.y * TS + TS / 2));
+        if (d < nearDist) nearTerminal = t;
+      });
+
+      var nearSoar = Math.hypot(p.pos.x - (state.soarPos.x * TS + TS / 2), p.pos.y - (state.soarPos.y * TS + TS / 2)) < nearDist;
+      var nearExit = Math.hypot(p.pos.x - (state.exitPos.x * TS + TS / 2), p.pos.y - (state.exitPos.y * TS + TS / 2)) < nearDist;
+
+      ['admin', 'tool', 'social'].forEach(function (key) {
+        var it = state.items[key];
+        if (!it || it.taken) return;
+        var d = Math.hypot(p.pos.x - (it.x * TS + TS / 2), p.pos.y - (it.y * TS + TS / 2));
+        if (d < nearDist) {
+          interactPrompt.textContent = '[E] Pick up ' + key;
+          interactPrompt.classList.add('show');
+        }
+      });
+
+      if (keyIsDown('e')) {
+        if (nearTerminal && !state.modalType) {
+          openModal(nearTerminal.kind === 'password' ? 'password' : 'sql');
+        } else if (nearSoar && state.alarmCountdown !== null) {
+          interactHold += dt();
+          interactPrompt.textContent = 'SOAR OVERRIDE ' + Math.min(100, (interactHold / 4) * 100).toFixed(0) + '% [hold E]';
+          interactPrompt.classList.add('show');
+          if (interactHold >= 4) {
+            state.alarmCountdown = null;
+            state.guardAlerted = false;
+            state.backupActive = false;
+            alarmTimerEl.classList.remove('show');
+            hudAlarm.classList.remove('on');
+            state.guards.forEach(function (g) { g.detect = 0; g.alerted = false; });
+            toast('SOAR playbook suppressed — move now');
+            interactHold = 0;
+            playTone('C5', '4n');
+          }
+        } else if (nearObj) {
+          state.copyTarget = nearObj;
+          state.copyProgress += dt();
+          copyWrap.classList.add('show');
+          copyFill.style.width = ((state.copyProgress / COPY_TIME) * 100) + '%';
+          interactPrompt.textContent = 'COPYING DATA_EXFIL…';
+          interactPrompt.classList.add('show');
+          if (state.copyProgress >= COPY_TIME) {
+            nearObj.done = true;
+            state.copied[nearObj.id] = true;
+            state.copyProgress = 0;
+            state.copyTarget = null;
+            copyWrap.classList.remove('show');
+            toast('Node copied (' + Object.keys(state.copied).length + '/' + TOTAL_OBJECTIVES + ')');
+            playTone('E4', '8n');
+          }
+        } else if (nearExit && Object.keys(state.copied).length >= WIN_NEED) {
+          triggerWin();
+        } else if (nearExit) {
+          interactPrompt.textContent = 'Need ' + WIN_NEED + '+ exfil nodes first';
+          interactPrompt.classList.add('show');
+        }
+      } else {
+        interactHold = 0;
+        if (!state.copyTarget) {
+          state.copyProgress = 0;
+          copyWrap.classList.remove('show');
+        }
+        if (!nearObj && !nearTerminal && !nearSoar) interactPrompt.classList.remove('show');
+        else if (nearObj) {
+          interactPrompt.textContent = 'Hold [E] 3s to copy DATA_EXFIL';
+          interactPrompt.classList.add('show');
+        } else if (nearTerminal) {
+          interactPrompt.textContent = '[E] Use ' + (nearTerminal.kind === 'password' ? 'password' : 'SQL') + ' terminal';
+          interactPrompt.classList.add('show');
+        } else if (nearSoar && state.alarmCountdown !== null) {
+          interactPrompt.textContent = 'Hold [E] 4s — SOAR override';
+          interactPrompt.classList.add('show');
         }
       }
     });
-    onKeyDown('left',function(){player.move(-120,0);});
-    onKeyDown('right',function(){player.move(120,0);});
-    onKeyDown('up',function(){player.move(0,-120);});
-    onKeyDown('down',function(){player.move(0,120);});
-    player.onCollide('guard',function(){
-      if(detected)return;
-      detected=true;
-      add([text('GUARD CONTACT — Review detection rules',{size:14}),pos(innerWidth/2-180,innerHeight/2-20),color(248,113,113),fixed()]);
-      add([text('→ read.html?doc=guides/investigate/event-graph/',{size:11}),pos(innerWidth/2-160,innerHeight/2+16),color(56,189,248),fixed()]);
-      wait(3,function(){go('heist.html');});
+
+    onKeyPress('h', function () {
+      state.showPatrol = !state.showPatrol;
+      toast(state.showPatrol ? 'Patrol paths visible' : 'Patrol paths hidden');
     });
-    player.onCollide('vault',function(){
-      add([text('VAULT ACCESSED — Exfil prevented',{size:16}),pos(innerWidth/2-140,innerHeight/2),color(52,211,153),fixed()]);
-      SiemCore.AchievementSystem.check('heist_win');
+
+    onKeyPress('1', function () {
+      document.querySelector('.lvl-btn[data-lvl="0"]').click();
     });
+    onKeyPress('2', function () {
+      document.querySelector('.lvl-btn[data-lvl="1"]').click();
+    });
+
+    addEventListener('resize', function () {
+      resizeCanvas(host.clientWidth, host.clientHeight);
+    });
+
+    startLevel(0);
   })();
   </script>
-  <div id="deck-nav-root"></div>
   <script src="assets/deck-nav.js?v=15.2.0-exp-nav"></script>
 </body>
 </html>
