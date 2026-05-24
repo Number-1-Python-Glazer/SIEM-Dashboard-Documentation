@@ -64,36 +64,27 @@ def draw_dio_pose(
     g = blank()
     ox, oy = offset_x, offset_y
 
-    # --- Hair (single connected silhouette — fringe meets headband, no floating dome) ---
-    rect(g, 8 + ox, 0 + oy, 23 + ox, 1 + oy, "HAIR_BRIGHT")
-    rect(g, 6 + ox, 1 + oy, 25 + ox, 2 + oy, "HAIR_BRIGHT")
-    rect(g, 5 + ox, 2 + oy, 26 + ox, 4 + oy, "HAIR_MID")
-    rect(g, 4 + ox, 3 + oy, 27 + ox, 8 + oy, "HAIR_MID")
-    rect(g, 5 + ox, 5 + oy, 26 + ox, 10 + oy, "HAIR_BRIGHT")
-    rect(g, 6 + ox, 6 + oy, 25 + ox, 11 + oy, "HAIR_MID")
-    rect(g, 7 + ox, 8 + oy, 24 + ox, 12 + oy, "HAIR_MID")
-    rect(g, 8 + ox, 12 + oy, 23 + ox, 14 + oy, "HAIR_BRIGHT")
-    rect(g, 9 + ox, 14 + oy, 22 + ox, 15 + oy, "HAIR_MID")
-    rect(g, 10 + ox, 15 + oy, 21 + ox, 16 + oy, "HAIR_MID")
-    rect(g, 3 + ox, 4 + oy, 7 + ox, 17 + oy, "HAIR_MID")
-    rect(g, 24 + ox, 4 + oy, 28 + ox, 17 + oy, "HAIR_MID")
-    rect(g, 4 + ox, 6 + oy, 9 + ox, 16 + oy, "HAIR_DARK")
-    rect(g, 22 + ox, 6 + oy, 27 + ox, 16 + oy, "HAIR_DARK")
-    rect(g, 6 + ox, 10 + oy, 10 + ox, 18 + oy, "HAIR_SHADOW")
-    rect(g, 21 + ox, 10 + oy, 25 + ox, 18 + oy, "HAIR_SHADOW")
-    rect(g, 11 + ox, 11 + oy, 20 + ox, 13 + oy, "HAIR_BRIGHT")
+    # --- Hair: side volume + rear crown (face draws on top — no floating dome) ---
+    rect(g, 11 + ox, 1 + oy, 20 + ox, 2 + oy, "HAIR_MID")
+    rect(g, 10 + ox, 2 + oy, 21 + ox, 4 + oy, "HAIR_BRIGHT")
+    rect(g, 9 + ox, 3 + oy, 22 + ox, 6 + oy, "HAIR_MID")
+    rect(g, 5 + ox, 5 + oy, 10 + ox, 16 + oy, "HAIR_MID")
+    rect(g, 21 + ox, 5 + oy, 26 + ox, 16 + oy, "HAIR_MID")
+    rect(g, 6 + ox, 7 + oy, 11 + ox, 18 + oy, "HAIR_DARK")
+    rect(g, 20 + ox, 7 + oy, 25 + ox, 18 + oy, "HAIR_DARK")
+    rect(g, 12 + ox, 8 + oy, 19 + ox, 9 + oy, "HAIR_MID")
+    rect(g, 13 + ox, 9 + oy, 18 + ox, 10 + oy, "HAIR_BRIGHT")
     if head_back:
-        rect(g, 5 + ox, 0 + oy, 27 + ox, 6 + oy, "HAIR_BRIGHT")
-        rect(g, 4 + ox, 6 + oy, 28 + ox, 14 + oy, "HAIR_MID")
+        rect(g, 8 + ox, 0 + oy, 23 + ox, 7 + oy, "HAIR_BRIGHT")
 
     # --- Heart headband + 2x2 green gem ---
-    band_y = 16 + oy
+    band_y = 11 + oy
     rect(g, 10 + ox, band_y, 21 + ox, band_y, "BAND_GOLD")
     rect(g, 14 + ox, band_y - 1, 17 + ox, band_y + 1, "GEM_GREEN")
     rect(g, 15 + ox, band_y, 16 + ox, band_y, "GEM_DARK")
 
     # --- Face / jawline ---
-    face_top = 17 + oy
+    face_top = 12 + oy
     rect(g, 12 + ox, face_top, 19 + ox, face_top + 1, "SKIN")
     rect(g, 11 + ox, face_top + 2, 20 + ox, face_top + 6, "SKIN")
     rect(g, 11 + ox, face_top + 7, 20 + ox, face_top + 8, "SKIN")
@@ -272,7 +263,7 @@ def draw_za_frame(step: int) -> list[list[str | None]]:
         return draw_dio_pose(arm_spread=True, cape_side=-1)
     if step == 1:
         g = draw_dio_pose(offset_y=-2, arm_spread=True, offset_x=2)
-        rect(g, 5, 0, 26, 4, "HAIR_BRIGHT")
+        rect(g, 9, 1, 22, 5, "HAIR_BRIGHT")
         apply_outline(g)
         return g
     if step == 2:
