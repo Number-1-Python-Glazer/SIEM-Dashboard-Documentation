@@ -1,401 +1,703 @@
 /**
- * RESONANCE — 3D Experience Module (enhanced)
- * Core concept: Rule optimization and synthesis
- * Six-channel detection mixer — tune rule resonance
- * Physics: Cannon-es via HabibiPhysics | Branches: 15 (5×L1–3) | Tasks: multi-step per level
+ * THE RESONANCE — 3D Experience Module
+ * Core concept: detection-rule tuning using threshold + conditions.
+ * Mechanics: slider threshold and checkbox conditions validated against sample telemetry.
  */
 (function () {
   'use strict';
 
   var GAME_ID = 'the_resonance';
-  var score = 0;
+  var totalScore = 0;
   var meshes = [];
-  var actionDefs = [
-    { id: 'enable_audio', label: 'ENABLE AUDIO', action: 'ENABLE AUDIO' },
-    { id: 'mix_channel', label: 'MIX CHANNEL', action: 'MIX CHANNEL' },
-    { id: 'mute_noise', label: 'MUTE NOISE', action: 'MUTE NOISE' },
-    { id: 'solo_alert', label: 'SOLO ALERT', action: 'SOLO ALERT' },
-    { id: 'export_mix', label: 'EXPORT MIX', action: 'EXPORT MIX' },
-  ];
+  var uiMounted = false;
+
+  var tuningState = {
+    threshold: 72,
+    conditions: {
+      impossibleTravel: true,
+      mfaBypass: true,
+      suspiciousAsn: true,
+      newDevice: true,
+      privilegedAccount: true
+    },
+    metricsByLevel: {}
+  };
+
+  var LEVEL_RULE_TARGETS = {
+    1: { minMaliciousRate: 90, maxFalsePositiveRate: 5 },
+    2: { minMaliciousRate: 90, maxFalsePositiveRate: 5 },
+    3: { minMaliciousRate: 90, maxFalsePositiveRate: 5 },
+    4: { minMaliciousRate: 90, maxFalsePositiveRate: 5 }
+  };
+
+  var LEVEL_CONFIG = {
+    1: {
+      name: 'Resonance Channel: Identity Pulse',
+      hint: 'Tune first-wave rule for identity-centric intrusions.',
+      breachFocus: 'Compromised admin login without MFA challenge',
+      sampleSet: [
+        { id: 'L1-M01', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L1-M02', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L1-M03', malicious: true, impossibleTravel: true, mfaBypass: false, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L1-M04', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L1-M05', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L1-M06', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L1-M07', malicious: true, impossibleTravel: true, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L1-M08', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L1-M09', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L1-M10', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L1-B01', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true },
+        { id: 'L1-B02', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: false },
+        { id: 'L1-B03', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L1-B04', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L1-B05', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L1-B06', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L1-B07', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L1-B08', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L1-B09', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L1-B10', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true }
+      ]
+    },
+    2: {
+      name: 'Resonance Channel: SaaS Token Drift',
+      hint: 'Tune OAuth abuse detection with low business friction.',
+      breachFocus: 'Malicious OAuth consent with broad delegated scopes',
+      sampleSet: [
+        { id: 'L2-M01', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L2-M02', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L2-M03', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L2-M04', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L2-M05', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L2-M06', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L2-M07', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L2-M08', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: false },
+        { id: 'L2-M09', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L2-M10', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L2-B01', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true },
+        { id: 'L2-B02', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: false },
+        { id: 'L2-B03', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L2-B04', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L2-B05', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L2-B06', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true },
+        { id: 'L2-B07', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L2-B08', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L2-B09', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L2-B10', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: false }
+      ]
+    },
+    3: {
+      name: 'Resonance Channel: Edge Exploit Echo',
+      hint: 'Tune edge compromise detections with accurate prioritization.',
+      breachFocus: 'Exploit chain on exposed ADC and rapid DMZ pivot',
+      sampleSet: [
+        { id: 'L3-M01', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L3-M02', malicious: true, impossibleTravel: true, mfaBypass: false, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L3-M03', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L3-M04', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L3-M05', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L3-M06', malicious: true, impossibleTravel: true, mfaBypass: false, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L3-M07', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn:true, newDevice: false, privilegedAccount: true },
+        { id: 'L3-M08', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L3-M09', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: false },
+        { id: 'L3-M10', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L3-B01', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true },
+        { id: 'L3-B02', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: false },
+        { id: 'L3-B03', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L3-B04', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L3-B05', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L3-B06', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L3-B07', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L3-B08', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L3-B09', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L3-B10', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: true }
+      ]
+    },
+    4: {
+      name: 'Resonance Channel: Supply Chain Frequency',
+      hint: 'Tune trusted-vendor abuse detection with precision.',
+      breachFocus: 'RMM abuse from over-trusted third-party integration',
+      sampleSet: [
+        { id: 'L4-M01', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L4-M02', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L4-M03', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L4-M04', malicious: true, impossibleTravel: true, mfaBypass: false, suspiciousAsn: true, newDevice: true, privilegedAccount: true },
+        { id: 'L4-M05', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L4-M06', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L4-M07', malicious: true, impossibleTravel: true, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L4-M08', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L4-M09', malicious: true, impossibleTravel: false, mfaBypass: true, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L4-M10', malicious: true, impossibleTravel: true, mfaBypass: true, suspiciousAsn: true, newDevice: true, privilegedAccount: false },
+        { id: 'L4-B01', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true },
+        { id: 'L4-B02', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: false },
+        { id: 'L4-B03', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L4-B04', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L4-B05', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L4-B06', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: false },
+        { id: 'L4-B07', malicious: false, impossibleTravel: false, mfaBypass: true, suspiciousAsn: false, newDevice: true, privilegedAccount: false },
+        { id: 'L4-B08', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: true, newDevice: false, privilegedAccount: true },
+        { id: 'L4-B09', malicious: false, impossibleTravel: false, mfaBypass: false, suspiciousAsn: false, newDevice: true, privilegedAccount: true },
+        { id: 'L4-B10', malicious: false, impossibleTravel: true, mfaBypass: false, suspiciousAsn: false, newDevice: false, privilegedAccount: true }
+      ]
+    },
+    5: {
+      name: 'Final Resonance: Master Channel',
+      epilogue: true
+    }
+  };
 
   var STORY_BEATS = {
     1: {
-      title: 'Channel Map',
-      opening: 'Meridian-7 briefing: Identify six SIEM audio channels',
-      beat1: 'Operator log L1-1: Rule optimization and synthesis — Channel Map phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L1-2: Rule optimization and synthesis — Channel Map phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L1-3: Rule optimization and synthesis — Channel Map phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L1-4: Rule optimization and synthesis — Channel Map phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L1-5: Rule optimization and synthesis — Channel Map phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L1-6: Rule optimization and synthesis — Channel Map phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L1-7: Rule optimization and synthesis — Channel Map phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 1 objective satisfied via ENABLE AUDIO.'
+      opening: 'Resonance chamber online. Identity pulse dataset includes impossible travel and MFA bypass traces.',
+      beat1: 'Threat intel: actor reused known bulletproof ASN ranges during privileged sign-ins.',
+      beat2: 'SOC archive: false positives previously spiked when thresholds were too permissive.',
+      beat3: 'Objective: maximize malicious capture while keeping analyst queue clean.',
+      closing: 'Identity pulse tuned and archived.'
     },
     2: {
-      title: 'Volume Balance',
-      opening: 'Meridian-7 briefing: Balance alert vs ingest channels',
-      beat1: 'Operator log L2-1: Rule optimization and synthesis — Volume Balance phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L2-2: Rule optimization and synthesis — Volume Balance phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L2-3: Rule optimization and synthesis — Volume Balance phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L2-4: Rule optimization and synthesis — Volume Balance phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L2-5: Rule optimization and synthesis — Volume Balance phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L2-6: Rule optimization and synthesis — Volume Balance phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L2-7: Rule optimization and synthesis — Volume Balance phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 2 objective satisfied via MIX CHANNEL.'
+      opening: 'SaaS token drift channel engaged. OAuth-consent abuse now appears as legitimate API traffic.',
+      beat1: 'Threat intel: delegated scope inflation correlates with refresh-token persistence campaigns.',
+      beat2: 'SOC archive: passwords were reset, yet unauthorized Graph API reads continued.',
+      beat3: 'Objective: tune for token abuse signatures with minimal business-user noise.',
+      closing: 'SaaS token drift tuned and archived.'
     },
     3: {
-      title: 'Noise Floor',
-      opening: 'Meridian-7 briefing: Mute ambient noise channel',
-      beat1: 'Operator log L3-1: Rule optimization and synthesis — Noise Floor phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L3-2: Rule optimization and synthesis — Noise Floor phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L3-3: Rule optimization and synthesis — Noise Floor phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L3-4: Rule optimization and synthesis — Noise Floor phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L3-5: Rule optimization and synthesis — Noise Floor phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L3-6: Rule optimization and synthesis — Noise Floor phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L3-7: Rule optimization and synthesis — Noise Floor phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 3 objective satisfied via MUTE NOISE.'
+      opening: 'Edge exploit echo channel engaged. Public ADC exploitation emits high-velocity telemetry clusters.',
+      beat1: 'Threat intel: exploit probes precede shell drops by under two minutes.',
+      beat2: 'SOC archive: low-severity auto-close rules hid actionable edge compromise signals.',
+      beat3: 'Objective: tighten detections to elevate real edge intrusions quickly.',
+      closing: 'Edge exploit echo tuned and archived.'
     },
     4: {
-      title: 'Solo Critical',
-      opening: 'Meridian-7 briefing: Isolate critical alert channel',
-      beat1: 'Operator log L4-1: Rule optimization and synthesis — Solo Critical phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L4-2: Rule optimization and synthesis — Solo Critical phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L4-3: Rule optimization and synthesis — Solo Critical phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L4-4: Rule optimization and synthesis — Solo Critical phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L4-5: Rule optimization and synthesis — Solo Critical phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L4-6: Rule optimization and synthesis — Solo Critical phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L4-7: Rule optimization and synthesis — Solo Critical phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 4 objective satisfied via SOLO ALERT.'
+      opening: 'Supply chain frequency channel engaged. Trusted RMM pathways can carry hostile automation.',
+      beat1: 'Threat intel: signed-vs-unsigned script divergence predicted lateral deployment risk.',
+      beat2: 'SOC archive: overbroad vendor privileges amplified blast radius.',
+      beat3: 'Objective: detect partner-origin abuse while preserving legitimate operations.',
+      closing: 'Supply chain frequency tuned and archived.'
     },
     5: {
-      title: 'Final Mix',
-      opening: 'Meridian-7 briefing: Export optimized detection profile',
-      beat1: 'Operator log L5-1: Rule optimization and synthesis — Final Mix phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L5-2: Rule optimization and synthesis — Final Mix phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L5-3: Rule optimization and synthesis — Final Mix phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L5-4: Rule optimization and synthesis — Final Mix phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L5-5: Rule optimization and synthesis — Final Mix phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L5-6: Rule optimization and synthesis — Final Mix phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L5-7: Rule optimization and synthesis — Final Mix phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 5 objective satisfied via EXPORT MIX.'
-    },
+      opening: 'Master channel opened. Resonance profiles from prior incidents merge into final doctrine.',
+      beat1: 'Curator note: rule quality is measured by both capture and precision.',
+      beat2: 'Curator note: high recall without precision burns analyst trust.',
+      beat3: 'Curator note: high precision without recall misses adversaries.',
+      closing: 'Resonance doctrine finalized.'
+    }
   };
 
-  function narrateLevel(level, shell) {
-    var b = STORY_BEATS[level];
-    if (!b || !shell) return;
-    shell.appendOut('[NARRATIVE] ' + b.opening);
-    shell.appendOut('[NARRATIVE] ' + b.beat1);
-  }
-
-  function buildScene(engine, level, shell) {
-    if (engine.clearPhysics) engine.clearPhysics();
-    meshes = [];
-    engine.addFloor(16, 16, 0x0f172a);
-    var core = engine.addBox(0, 0.5, 0, 1.2, 1.0, 1.2, parseInt('0x0a0410', 16), 0);
-    core.material.emissive = new THREE.Color(parseInt('0x0a0410', 16));
-    core.material.emissiveIntensity = 0.25;
-    meshes.push(core);
-    var count = 4 + level;
-    for (var i = 0; i < count; i++) {
-      var m = engine.addBox(
-        (Math.random() - 0.5) * 8,
-        1.2 + Math.random() * 0.5,
-        (Math.random() - 0.5) * 8,
-        0.4, 0.4, 0.4,
-        0x1e293b + (i * 0x050505),
-        0.4 + (i * 0.05)
-      );
-      m.userData.objId = 'obj_' + level + '_' + i;
-      meshes.push(m);
-    }
-    if (level >= 2 && engine.addPhysicsSphere) {
-      for (var s = 0; s < level + 2; s++) {
-        var sp = engine.addPhysicsSphere(
-          (Math.random() - 0.5) * 6,
-          2.5 + Math.random() * 2,
-          (Math.random() - 0.5) * 6,
-          0.12 + Math.random() * 0.08,
-          0x38bdf8,
-          0.5
-        );
-        meshes.push(sp);
-      }
-    }
-    if (level >= 3) {
-      var alert = engine.addBox(0, 2.0, -2, 2.5, 0.15, 0.1, 0x7f1d1d, 0);
-      alert.material.emissive = new THREE.Color(0xff0000);
-      alert.material.emissiveIntensity = 0.4 + level * 0.05;
-      meshes.push(alert);
-    }
-    narrateLevel(level, shell);
-    bindActionButtons(shell, level);
-  }
-
-  function bindActionButtons(shell, level) {
-    var wrap = document.getElementById('action-btns');
-    wrap.innerHTML = '';
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'act-btn';
-      b.textContent = 'Begin debrief';
-      b.onclick = function () { shell.runEpilogue(); };
-      wrap.appendChild(b);
+  function appendLog(text) {
+    var el = document.getElementById('action-log');
+    if (!el) {
       return;
     }
-    actionDefs.forEach(function (a) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'act-btn';
-      btn.textContent = a.label;
-      btn.onclick = function () { onAction(a.action, shell, level); };
-      wrap.appendChild(btn);
-    });
+    el.textContent += text + '\n';
+    el.scrollTop = el.scrollHeight;
   }
 
-  function onAction(action, shell, level) {
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) return;
-    var log = document.getElementById('action-log');
-    log.textContent += '> ' + action + '\n';
-    var seq = def.taskSequence || [{ action: def.action, hint: def.hint }];
-    var idx = shell.levelState.taskIdx || 0;
-    var expected = seq[idx];
-    if (expected && action === expected.action) {
-      score += 80 + level * 20;
-      updateScoreDisplay();
-      shell.appendOut('[SUCCESS] ' + expected.hint);
-      shell.levelState.taskIdx = idx + 1;
-      if (shell.levelState.taskIdx >= seq.length) {
-        shell.onLevelTasksComplete();
-      } else {
-        shell.setTaskText('Step ' + (shell.levelState.taskIdx + 1) + '/' + seq.length + ': ' + seq[shell.levelState.taskIdx].hint);
-      }
-    } else {
-      HabibiProgression.logFailure(GAME_ID, level, 'wrong_action', shell.state);
-      var n = HabibiProgression.getFailureCount(GAME_ID, level, 'wrong_action', shell.state);
-      var fb = HabibiLearning.getFailureFeedback(GAME_ID, level, 'wrong_command', n);
-      var need = expected ? expected.action : def.action;
-      shell.appendOut('[FAIL] Expected: ' + need);
-      if (fb) shell.appendOut('[TUTOR] ' + fb);
-      else shell.appendOut('[TUTOR] Step ' + (idx + 1) + ' requires ' + need + '.');
+  function updateHud() {
+    var el = document.getElementById('hud-score');
+    if (el) {
+      el.textContent = 'SCORE ' + totalScore;
     }
   }
 
-  function updateScoreDisplay() {
-    var el = document.getElementById('hud-score');
-    if (el) el.textContent = 'SCORE ' + score;
+  function setTaskText(text) {
+    var task = document.getElementById('task-text');
+    if (task) {
+      task.textContent = text;
+    }
   }
 
-  function startSpeedTrial(shell) {
-    var start = Date.now();
-    var idx = 0;
-    var seq = actionDefs.slice(0, Math.min(5, actionDefs.length));
-    shell.appendOut('[SKILL] Execute: ' + seq.map(function (s) { return s.action; }).join(' → '));
-    function tryAction(action) {
-      if (idx >= seq.length) return;
-      if (action === seq[idx].action) {
-        idx++;
-        if (idx >= seq.length) {
-          var sc = Math.max(0, 900 - Math.floor((Date.now() - start) / 100));
-          shell.submitScore('speedTrial', sc);
-          shell.appendOut('[SKILL] Speed trial score: ' + sc);
+  function getSeverityScore(event, selectedConditions) {
+    var weights = {
+      impossibleTravel: 22,
+      mfaBypass: 28,
+      suspiciousAsn: 19,
+      newDevice: 14,
+      privilegedAccount: 17
+    };
+    var score = 0;
+    var keys = Object.keys(selectedConditions);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      if (selectedConditions[key] && event[key]) {
+        score += weights[key];
+      }
+    }
+    return score;
+  }
+
+  function evaluateRuleAgainstSampleSet(level, threshold, selectedConditions) {
+    var sampleSet = LEVEL_CONFIG[level].sampleSet;
+    var stats = {
+      totalMalicious: 0,
+      totalBenign: 0,
+      detectedMalicious: 0,
+      falsePositives: 0,
+      detectedIds: [],
+      missedIds: [],
+      falsePositiveIds: []
+    };
+
+    for (var i = 0; i < sampleSet.length; i++) {
+      var event = sampleSet[i];
+      var score = getSeverityScore(event, selectedConditions);
+      var hit = score >= threshold;
+      if (event.malicious) {
+        stats.totalMalicious++;
+        if (hit) {
+          stats.detectedMalicious++;
+          stats.detectedIds.push(event.id);
+        } else {
+          stats.missedIds.push(event.id);
+        }
+      } else {
+        stats.totalBenign++;
+        if (hit) {
+          stats.falsePositives++;
+          stats.falsePositiveIds.push(event.id);
         }
       }
     }
-    shell._speedTrialHook = tryAction;
+
+    stats.maliciousHitRate = stats.totalMalicious === 0 ? 0 : (stats.detectedMalicious / stats.totalMalicious) * 100;
+    stats.falsePositiveRate = stats.totalBenign === 0 ? 0 : (stats.falsePositives / stats.totalBenign) * 100;
+    return stats;
+  }
+
+  function deepCopyConditions(conditions) {
+    return {
+      impossibleTravel: !!conditions.impossibleTravel,
+      mfaBypass: !!conditions.mfaBypass,
+      suspiciousAsn: !!conditions.suspiciousAsn,
+      newDevice: !!conditions.newDevice,
+      privilegedAccount: !!conditions.privilegedAccount
+    };
+  }
+
+  function formatPct(n) {
+    return n.toFixed(1) + '%';
+  }
+
+  function narrateLevel(level, shell) {
+    var beat = STORY_BEATS[level];
+    if (!beat || !shell) {
+      return;
+    }
+    shell.appendOut('[NARRATIVE] ' + beat.opening);
+    shell.appendOut('[NARRATIVE] ' + beat.beat1);
+    shell.appendOut('[NARRATIVE] ' + beat.beat2);
+    shell.appendOut('[NARRATIVE] ' + beat.beat3);
+  }
+
+  function renderTuningControls(shell, level) {
+    var wrap = document.getElementById('action-btns');
+    if (!wrap) {
+      return;
+    }
+    wrap.innerHTML = '';
+    uiMounted = true;
+
+    if (LEVEL_CONFIG[level].epilogue) {
+      var debriefBtn = document.createElement('button');
+      debriefBtn.type = 'button';
+      debriefBtn.className = 'act-btn';
+      debriefBtn.textContent = 'Begin Debrief';
+      debriefBtn.onclick = function () {
+        shell.runEpilogue();
+      };
+      wrap.appendChild(debriefBtn);
+      return;
+    }
+
+    var title = document.createElement('div');
+    title.className = 'phase-title';
+    title.textContent = 'RULE TUNING CONSOLE';
+    wrap.appendChild(title);
+
+    var thresholdLabel = document.createElement('label');
+    thresholdLabel.textContent = 'Alert Threshold: ';
+    thresholdLabel.style.display = 'block';
+    thresholdLabel.style.marginBottom = '6px';
+
+    var thresholdValue = document.createElement('span');
+    thresholdValue.id = 'res-threshold-value';
+    thresholdValue.textContent = String(tuningState.threshold);
+    thresholdLabel.appendChild(thresholdValue);
+    wrap.appendChild(thresholdLabel);
+
+    var slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '40';
+    slider.max = '100';
+    slider.step = '1';
+    slider.value = String(tuningState.threshold);
+    slider.style.width = '100%';
+    slider.oninput = function () {
+      tuningState.threshold = parseInt(slider.value, 10);
+      thresholdValue.textContent = String(tuningState.threshold);
+    };
+    wrap.appendChild(slider);
+
+    var conditionsTitle = document.createElement('div');
+    conditionsTitle.textContent = 'Rule Conditions';
+    conditionsTitle.style.marginTop = '10px';
+    conditionsTitle.style.marginBottom = '6px';
+    wrap.appendChild(conditionsTitle);
+
+    var keys = Object.keys(tuningState.conditions);
+    for (var i = 0; i < keys.length; i++) {
+      (function (key) {
+        var row = document.createElement('label');
+        row.style.display = 'block';
+        row.style.marginBottom = '4px';
+
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!tuningState.conditions[key];
+        cb.onchange = function () {
+          tuningState.conditions[key] = cb.checked;
+        };
+        row.appendChild(cb);
+
+        var text = document.createTextNode(' ' + key.replace(/([A-Z])/g, ' $1').replace(/^./, function (c) { return c.toUpperCase(); }));
+        row.appendChild(text);
+        wrap.appendChild(row);
+      })(keys[i]);
+    }
+
+    var analyzeBtn = document.createElement('button');
+    analyzeBtn.type = 'button';
+    analyzeBtn.className = 'act-btn';
+    analyzeBtn.textContent = 'Analyze Rule';
+    analyzeBtn.onclick = function () {
+      runEvaluation(shell, level, false);
+    };
+    wrap.appendChild(analyzeBtn);
+
+    var submitBtn = document.createElement('button');
+    submitBtn.type = 'button';
+    submitBtn.className = 'act-btn';
+    submitBtn.textContent = 'Submit Tuning';
+    submitBtn.onclick = function () {
+      runEvaluation(shell, level, true);
+    };
+    wrap.appendChild(submitBtn);
+
+    var resetBtn = document.createElement('button');
+    resetBtn.type = 'button';
+    resetBtn.className = 'act-btn secondary';
+    resetBtn.textContent = 'Reset Preset';
+    resetBtn.onclick = function () {
+      tuningState.threshold = 72;
+      tuningState.conditions.impossibleTravel = true;
+      tuningState.conditions.mfaBypass = true;
+      tuningState.conditions.suspiciousAsn = true;
+      tuningState.conditions.newDevice = true;
+      tuningState.conditions.privilegedAccount = true;
+      renderTuningControls(shell, level);
+      shell.appendOut('[SYSTEM] Resonance preset restored.');
+    };
+    wrap.appendChild(resetBtn);
+  }
+
+  function runEvaluation(shell, level, commitIfPassing) {
+    var selected = deepCopyConditions(tuningState.conditions);
+    var activeCount = 0;
+    var keys = Object.keys(selected);
+    for (var i = 0; i < keys.length; i++) {
+      if (selected[keys[i]]) {
+        activeCount++;
+      }
+    }
+    if (activeCount < 3) {
+      shell.appendOut('[FAIL] At least 3 conditions must be active to avoid trivial underfitting.');
+      return;
+    }
+
+    var stats = evaluateRuleAgainstSampleSet(level, tuningState.threshold, selected);
+    var target = LEVEL_RULE_TARGETS[level];
+    var pass = stats.maliciousHitRate > target.minMaliciousRate && stats.falsePositiveRate < target.maxFalsePositiveRate;
+
+    shell.appendOut('[EVAL] Threshold=' + tuningState.threshold + ', ActiveConditions=' + activeCount);
+    shell.appendOut('[EVAL] Malicious hit rate: ' + formatPct(stats.maliciousHitRate) + ' (target > ' + target.minMaliciousRate + '%)');
+    shell.appendOut('[EVAL] False positive rate: ' + formatPct(stats.falsePositiveRate) + ' (target < ' + target.maxFalsePositiveRate + '%)');
+    shell.appendOut('[EVAL] Detected malicious: ' + stats.detectedMalicious + '/' + stats.totalMalicious + ', False positives: ' + stats.falsePositives + '/' + stats.totalBenign);
+
+    if (!pass) {
+      if (stats.maliciousHitRate <= target.minMaliciousRate) {
+        shell.appendOut('[TUTOR] Detection recall too low. Lower threshold or include a missing high-signal condition.');
+      }
+      if (stats.falsePositiveRate >= target.maxFalsePositiveRate) {
+        shell.appendOut('[TUTOR] False positives too high. Increase threshold or disable weaker condition combinations.');
+      }
+      if (stats.missedIds.length > 0) {
+        shell.appendOut('[INTEL] Missed malicious sample IDs: ' + stats.missedIds.join(', '));
+      }
+      if (stats.falsePositiveIds.length > 0) {
+        shell.appendOut('[INTEL] False positive sample IDs: ' + stats.falsePositiveIds.join(', '));
+      }
+      if (commitIfPassing) {
+        var penalty = 55 + level * 10;
+        totalScore = Math.max(0, totalScore - penalty);
+        updateHud();
+        HabibiProgression.logFailure(GAME_ID, level, 'bad_tuning', shell.state);
+        shell.appendOut('[SCORE] -' + penalty + ' for submitting non-compliant tuning.');
+      }
+      setTaskText('Tune for >90% malicious hits and <5% false positives before submission.');
+      return;
+    }
+
+    tuningState.metricsByLevel[level] = {
+      threshold: tuningState.threshold,
+      conditions: selected,
+      maliciousHitRate: stats.maliciousHitRate,
+      falsePositiveRate: stats.falsePositiveRate,
+      detectedMalicious: stats.detectedMalicious,
+      falsePositives: stats.falsePositives
+    };
+
+    shell.appendOut('[SUCCESS] Rule profile satisfies resonance constraints.');
+    shell.appendOut('[INTEL] Captured malicious sample IDs: ' + stats.detectedIds.join(', '));
+
+    if (commitIfPassing) {
+      var awarded = 260 + level * 35;
+      totalScore += awarded;
+      updateHud();
+      shell.appendOut('[SCORE] +' + awarded + ' for production-grade tuning.');
+      shell.appendOut('[CLOSING] ' + STORY_BEATS[level].closing);
+      shell.onLevelTasksComplete();
+    } else {
+      setTaskText('Analysis passes. Submit tuning to lock this level.');
+    }
+  }
+
+  function buildScene(engine, level, shell) {
+    if (engine.clearPhysics) {
+      engine.clearPhysics();
+    }
+    meshes = [];
+
+    engine.addFloor(16, 16, 0x0f172a);
+    var core = engine.addBox(0, 0.5, 0, 1.2, 1.0, 1.2, 0x111827, 0);
+    core.material.emissive = new THREE.Color(0x1e1b4b);
+    core.material.emissiveIntensity = 0.35;
+    meshes.push(core);
+
+    var panelCount = 6 + level;
+    for (var i = 0; i < panelCount; i++) {
+      var x = -4 + i * 1.1;
+      var y = 1.2 + (i % 3) * 0.2;
+      var z = -2 + (i % 2) * 1.6;
+      var panel = engine.addBox(x, y, z, 0.6, 0.3, 0.1, 0x312e81 + i * 950, 0.15);
+      panel.userData.particle = true;
+      meshes.push(panel);
+    }
+
+    if (engine.addPhysicsSphere && level >= 2) {
+      for (var s = 0; s < 2 + level; s++) {
+        var orb = engine.addPhysicsSphere(
+          (Math.random() - 0.5) * 6,
+          2.5 + Math.random() * 1.6,
+          (Math.random() - 0.5) * 6,
+          0.15,
+          0x22d3ee,
+          0.4
+        );
+        meshes.push(orb);
+      }
+    }
+
+    narrateLevel(level, shell);
+    if (!LEVEL_CONFIG[level].epilogue) {
+      shell.appendOut('[INTEL] Breach focus: ' + LEVEL_CONFIG[level].breachFocus);
+      shell.appendOut('[INTEL] Adjust threshold and conditions, then submit a compliant profile.');
+      setTaskText('Tune rule: malicious hits >90% and false positives <5%.');
+    } else {
+      setTaskText('Master channel ready for debrief.');
+    }
+    renderTuningControls(shell, level);
+  }
+
+  function levelPassRecorded(level) {
+    var metric = tuningState.metricsByLevel[level];
+    if (!metric) {
+      return false;
+    }
+    return metric.maliciousHitRate > 90 && metric.falsePositiveRate < 5;
+  }
+
+  function startSpeedTrial(shell) {
+    var score = 350;
+    for (var lvl = 1; lvl <= 4; lvl++) {
+      if (levelPassRecorded(lvl)) {
+        score += 120;
+      }
+    }
+    shell.submitScore('speedTrial', score);
+    shell.appendOut('[SKILL] Resonance speed trial scored ' + score + '.');
   }
 
   function startAccuracyGauntlet(shell) {
-    var sc = 850;
-    shell.submitScore('accuracyGauntlet', sc);
-    shell.appendOut('[SKILL] Accuracy gauntlet score: ' + sc);
+    var score = 1000;
+    for (var lvl = 1; lvl <= 4; lvl++) {
+      var metric = tuningState.metricsByLevel[lvl];
+      if (!metric) {
+        score -= 160;
+        continue;
+      }
+      var hitGap = Math.max(0, 90 - metric.maliciousHitRate);
+      var fpGap = Math.max(0, metric.falsePositiveRate - 5);
+      score -= Math.round(hitGap * 3 + fpGap * 4);
+    }
+    score = Math.max(0, score);
+    shell.submitScore('accuracyGauntlet', score);
+    shell.appendOut('[SKILL] Resonance accuracy gauntlet scored ' + score + '.');
   }
 
   function startDecisionTree(shell) {
-    var gained = 600;
-    shell.appendOut('[TREE] Decision tree complete — optimal playbook path recorded.');
-    shell.submitScore('decisionTree', gained);
+    var score = 0;
+    for (var lvl = 1; lvl <= 4; lvl++) {
+      var metric = tuningState.metricsByLevel[lvl];
+      if (!metric) {
+        continue;
+      }
+      var quality = metric.maliciousHitRate - metric.falsePositiveRate;
+      score += Math.round(quality * (4 + lvl));
+    }
+    shell.submitScore('decisionTree', score);
+    shell.appendOut('[TREE] Resonance decision tree scored ' + score + '.');
   }
 
   var config = {
     gameId: GAME_ID,
-    title: 'RESONANCE',
+    title: 'THE RESONANCE',
     achievementId: 'resonance_master',
-    leaderboardChallenge: 'speedTrial',
-    engine: { bg: 0x0a0410, physics: true },
+    leaderboardChallenge: 'accuracyGauntlet',
+    engine: { bg: 0x090b1a, physics: true },
     moveSpeed: 2.4,
     buildScene: buildScene,
     levels: {
-    1: {
-      name: 'Channel Map',
-      hint: 'Identify six SIEM audio channels',
-      action: 'ENABLE AUDIO',
-      taskSequence: [
-        { action: 'ENABLE AUDIO', hint: 'Context pass — run ENABLE AUDIO on incoming telemetry' },
-        { action: 'ENABLE AUDIO', hint: 'Identify six SIEM audio channels' }
-      ],
-      tasks: [{
-        id: 'L1_main',
-        hint: 'Identify six SIEM audio channels',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] ENABLE AUDIO — Identify six SIEM audio channels',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 1 (5 paths)',
-        desc: 'Your Rule optimization and synthesis choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_1', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_1', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_1', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_1', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_1', label: 'Isolate affected segment conservatively' }
+      1: {
+        name: LEVEL_CONFIG[1].name,
+        hint: LEVEL_CONFIG[1].hint,
+        tasks: [
+          {
+            id: 'l1_tuning',
+            hint: 'Submit tuning profile above malicious/FP thresholds.',
+            errorType: 'wrong_command',
+            validate: function () {
+              return levelPassRecorded(1);
+            },
+            output: '[OK] Level 1 tuning validated.'
+          }
         ]
-      }
-    }
-    2: {
-      name: 'Volume Balance',
-      hint: 'Balance alert vs ingest channels',
-      action: 'MIX CHANNEL', timeLimit: 300,
-      taskSequence: [
-        { action: 'MIX CHANNEL', hint: 'Context pass — run MIX CHANNEL on incoming telemetry' },
-        { action: 'MIX CHANNEL', hint: 'Balance alert vs ingest channels' }
-      ],
-      tasks: [{
-        id: 'L2_main',
-        hint: 'Balance alert vs ingest channels',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] MIX CHANNEL — Balance alert vs ingest channels',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 2 (5 paths)',
-        desc: 'Your Rule optimization and synthesis choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_2', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_2', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_2', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_2', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_2', label: 'Isolate affected segment conservatively' }
+      },
+      2: {
+        name: LEVEL_CONFIG[2].name,
+        hint: LEVEL_CONFIG[2].hint,
+        tasks: [
+          {
+            id: 'l2_tuning',
+            hint: 'Submit tuning profile above malicious/FP thresholds.',
+            errorType: 'wrong_command',
+            validate: function () {
+              return levelPassRecorded(2);
+            },
+            output: '[OK] Level 2 tuning validated.'
+          }
         ]
-      }
-    }
-    3: {
-      name: 'Noise Floor',
-      hint: 'Mute ambient noise channel',
-      action: 'MUTE NOISE', timeLimit: 360,
-      taskSequence: [
-        { action: 'EXPORT MIX', hint: 'Pre-check — validate environment baseline' },
-        { action: 'MUTE NOISE', hint: 'Context pass — run MUTE NOISE on incoming telemetry' },
-        { action: 'MUTE NOISE', hint: 'Mute ambient noise channel' }
-      ],
-      tasks: [{
-        id: 'L3_main',
-        hint: 'Mute ambient noise channel',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] MUTE NOISE — Mute ambient noise channel',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 3 (5 paths)',
-        desc: 'Your Rule optimization and synthesis choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_3', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_3', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_3', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_3', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_3', label: 'Isolate affected segment conservatively' }
+      },
+      3: {
+        name: LEVEL_CONFIG[3].name,
+        hint: LEVEL_CONFIG[3].hint,
+        tasks: [
+          {
+            id: 'l3_tuning',
+            hint: 'Submit tuning profile above malicious/FP thresholds.',
+            errorType: 'wrong_command',
+            validate: function () {
+              return levelPassRecorded(3);
+            },
+            output: '[OK] Level 3 tuning validated.'
+          }
         ]
+      },
+      4: {
+        name: LEVEL_CONFIG[4].name,
+        hint: LEVEL_CONFIG[4].hint,
+        tasks: [
+          {
+            id: 'l4_tuning',
+            hint: 'Submit tuning profile above malicious/FP thresholds.',
+            errorType: 'wrong_command',
+            validate: function () {
+              return levelPassRecorded(4);
+            },
+            output: '[OK] Level 4 tuning validated.'
+          }
+        ]
+      },
+      5: {
+        name: LEVEL_CONFIG[5].name,
+        epilogue: true
       }
-    }
-    4: {
-      name: 'Solo Critical',
-      hint: 'Isolate critical alert channel',
-      action: 'SOLO ALERT', timeLimit: 420,
-      taskSequence: [
-        { action: 'ENABLE AUDIO', hint: 'Pre-check — validate environment baseline' },
-        { action: 'SOLO ALERT', hint: 'Context pass — run SOLO ALERT on incoming telemetry' },
-        { action: 'SOLO ALERT', hint: 'Isolate critical alert channel' }
-      ],
-      tasks: [{
-        id: 'L4_main',
-        hint: 'Isolate critical alert channel',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] SOLO ALERT — Isolate critical alert channel',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }]
-    }
-    5: { name: 'Final Mix', epilogue: true }
     },
     skills: [
-      { id: 'speedTrial', name: 'Speed Trial', unlockAfter: 1, desc: 'Chain operator actions quickly', start: startSpeedTrial },
-      { id: 'accuracyGauntlet', name: 'Accuracy Gauntlet', unlockAfter: 2, desc: 'Zero-error action sequence', start: startAccuracyGauntlet },
-      { id: 'decisionTree', name: 'Decision Tree', unlockAfter: 3, desc: 'Pick optimal playbook steps', start: startDecisionTree }
+      { id: 'speedTrial', name: 'Speed Trial', unlockAfter: 1, desc: 'Reward quick compliant tuning.', start: startSpeedTrial },
+      { id: 'accuracyGauntlet', name: 'Accuracy Gauntlet', unlockAfter: 2, desc: 'Reward tight recall/precision performance.', start: startAccuracyGauntlet },
+      { id: 'decisionTree', name: 'Decision Tree', unlockAfter: 3, desc: 'Weight tuning by net detection quality.', start: startDecisionTree }
     ],
-    onLevelStart: function (n, shell) {
-      shell.levelState.taskIdx = 0;
-      var def = shell.config.levels[n];
-      var seq = def.taskSequence || [{ hint: def.hint }];
-      shell.setTaskText('Step 1/' + seq.length + ': ' + (seq[0].hint || def.hint));
-      score += n * 10;
-      updateScoreDisplay();
-      narrateLevel(n, shell);
+    onLevelStart: function (level) {
+      totalScore += level * 10;
+      updateHud();
+      if (!LEVEL_CONFIG[level].epilogue) {
+        setTaskText('Tune rule: malicious hits >90% and false positives <5%.');
+      } else {
+        setTaskText('Final resonance archive ready for debrief.');
+      }
     },
-    onLevelComplete: function (lv, shell) {
-      var b = STORY_BEATS[lv];
-      if (b) shell.appendOut('[NARRATIVE] ' + b.closing);
+    onLevelComplete: function (level, shell) {
+      if (STORY_BEATS[level]) {
+        shell.appendOut('[ARCHIVE] ' + STORY_BEATS[level].closing);
+      }
     }
   };
 
-  config.onTick = function (dt, shell) {
-    meshes.forEach(function (m) {
-      if (m.userData && m.userData.physicsBody && m.userData.physicsBody.mass > 0) return;
-      if (m.userData && m.userData.particle) {
-        m.position.y += Math.sin(Date.now() * 0.002 + m.position.x) * dt * 0.3;
+  config.onTick = function (dt) {
+    for (var i = 0; i < meshes.length; i++) {
+      var mesh = meshes[i];
+      if (!mesh || !mesh.userData || !mesh.userData.particle) {
+        continue;
       }
-    });
+      mesh.position.y += Math.sin(Date.now() * 0.0018 + i) * dt * 0.3;
+      mesh.rotation.x += dt * 0.2;
+      mesh.rotation.y += dt * 0.3;
+    }
   };
 
   document.addEventListener('DOMContentLoaded', function () {
     if (!HabibiProgression.isGameUnlocked(GAME_ID) && GAME_ID !== 'the_terminal') {
-      var st = HabibiProgression.load(GAME_ID);
-      if (!st.unlocked) {
-        document.getElementById('task-text').textContent = 'Module locked — complete previous game epilogue first.';
+      var progress = HabibiProgression.load(GAME_ID);
+      if (!progress.unlocked) {
+        setTaskText('Module locked — complete previous game epilogue first.');
         return;
       }
     }
+
     var shell = new HabibiGameShell(config);
     shell.score = 0;
-    shell.updateScore = updateScoreDisplay;
-    shell.appendOut = function (t) {
-      var el = document.getElementById('action-log');
-      el.textContent += t + '\n';
-      el.scrollTop = el.scrollHeight;
+    shell.appendOut = function (txt) {
+      appendLog(txt);
     };
-    shell.setTaskText = function (t) { document.getElementById('task-text').textContent = t; };
+    shell.setTaskText = function (txt) {
+      setTaskText(txt);
+    };
+    shell.updateScore = function () {
+      updateHud();
+    };
     shell.init();
+
+    if (!uiMounted) {
+      renderTuningControls(shell, 1);
+    }
   });
 })();
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */

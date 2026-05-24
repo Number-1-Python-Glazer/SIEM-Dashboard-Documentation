@@ -1,8 +1,6 @@
 /**
- * THE FORGE — 3D Experience Module (enhanced)
- * Core concept: Detection rule construction
- * Rule smithy — build, test, tune detection logic
- * Physics: Cannon-es via HabibiPhysics | Branches: 15 (5×L1–3) | Tasks: multi-step per level
+ * THE FORGE — full gameplay module
+ * Build and validate detection logic against malicious and benign samples.
  */
 (function () {
   'use strict';
@@ -10,178 +8,125 @@
   var GAME_ID = 'the_forge';
   var score = 0;
   var meshes = [];
-  var actionDefs = [
-    { id: 'add_trigger', label: 'ADD TRIGGER', action: 'ADD TRIGGER' },
-    { id: 'add_filter', label: 'ADD FILTER', action: 'ADD FILTER' },
-    { id: 'test_rule', label: 'TEST RULE', action: 'TEST RULE' },
-    { id: 'tune_thresh', label: 'TUNE THRESH', action: 'TUNE THRESH' },
-    { id: 'export_json', label: 'EXPORT JSON', action: 'EXPORT JSON' },
-  ];
-
-  var STORY_BEATS = {
-    1: {
-      title: 'Rule Template',
-      opening: 'Meridian-7 briefing: Assemble trigger + filter from template',
-      beat1: 'Operator log L1-1: Detection rule construction — Rule Template phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L1-2: Detection rule construction — Rule Template phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L1-3: Detection rule construction — Rule Template phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L1-4: Detection rule construction — Rule Template phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L1-5: Detection rule construction — Rule Template phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L1-6: Detection rule construction — Rule Template phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L1-7: Detection rule construction — Rule Template phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 1 objective satisfied via ADD TRIGGER.'
-    },
-    2: {
-      title: 'False Positive Tune',
-      opening: 'Meridian-7 briefing: Reduce noise below 10% FP rate',
-      beat1: 'Operator log L2-1: Detection rule construction — False Positive Tune phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L2-2: Detection rule construction — False Positive Tune phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L2-3: Detection rule construction — False Positive Tune phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L2-4: Detection rule construction — False Positive Tune phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L2-5: Detection rule construction — False Positive Tune phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L2-6: Detection rule construction — False Positive Tune phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L2-7: Detection rule construction — False Positive Tune phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 2 objective satisfied via TUNE THRESH.'
-    },
-    3: {
-      title: 'Correlation Chain',
-      opening: 'Meridian-7 briefing: Link two events into one rule',
-      beat1: 'Operator log L3-1: Detection rule construction — Correlation Chain phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L3-2: Detection rule construction — Correlation Chain phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L3-3: Detection rule construction — Correlation Chain phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L3-4: Detection rule construction — Correlation Chain phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L3-5: Detection rule construction — Correlation Chain phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L3-6: Detection rule construction — Correlation Chain phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L3-7: Detection rule construction — Correlation Chain phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 3 objective satisfied via ADD FILTER.'
-    },
-    4: {
-      title: 'Live Validation',
-      opening: 'Meridian-7 briefing: Rule must catch sample malicious event',
-      beat1: 'Operator log L4-1: Detection rule construction — Live Validation phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L4-2: Detection rule construction — Live Validation phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L4-3: Detection rule construction — Live Validation phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L4-4: Detection rule construction — Live Validation phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L4-5: Detection rule construction — Live Validation phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L4-6: Detection rule construction — Live Validation phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L4-7: Detection rule construction — Live Validation phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 4 objective satisfied via TEST RULE.'
-    },
-    5: {
-      title: 'Deploy Sign-off',
-      opening: 'Meridian-7 briefing: Export rule JSON for production',
-      beat1: 'Operator log L5-1: Detection rule construction — Deploy Sign-off phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L5-2: Detection rule construction — Deploy Sign-off phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L5-3: Detection rule construction — Deploy Sign-off phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L5-4: Detection rule construction — Deploy Sign-off phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L5-5: Detection rule construction — Deploy Sign-off phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L5-6: Detection rule construction — Deploy Sign-off phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L5-7: Detection rule construction — Deploy Sign-off phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 5 objective satisfied via EXPORT JSON.'
-    },
+  var glow = 0;
+  var runtime = {
+    skill: null,
+    levelStartMs: 0
   };
 
-  function narrateLevel(level, shell) {
-    var b = STORY_BEATS[level];
-    if (!b || !shell) return;
-    shell.appendOut('[NARRATIVE] ' + b.opening);
-    shell.appendOut('[NARRATIVE] ' + b.beat1);
-  }
-
-  function buildScene(engine, level, shell) {
-    if (engine.clearPhysics) engine.clearPhysics();
-    meshes = [];
-    engine.addFloor(16, 16, 0x0f172a);
-    var core = engine.addBox(0, 0.5, 0, 1.2, 1.0, 1.2, parseInt('0x030a04', 16), 0);
-    core.material.emissive = new THREE.Color(parseInt('0x030a04', 16));
-    core.material.emissiveIntensity = 0.25;
-    meshes.push(core);
-    var count = 4 + level;
-    for (var i = 0; i < count; i++) {
-      var m = engine.addBox(
-        (Math.random() - 0.5) * 8,
-        1.2 + Math.random() * 0.5,
-        (Math.random() - 0.5) * 8,
-        0.4, 0.4, 0.4,
-        0x1e293b + (i * 0x050505),
-        0.4 + (i * 0.05)
-      );
-      m.userData.objId = 'obj_' + level + '_' + i;
-      meshes.push(m);
-    }
-    if (level >= 2 && engine.addPhysicsSphere) {
-      for (var s = 0; s < level + 2; s++) {
-        var sp = engine.addPhysicsSphere(
-          (Math.random() - 0.5) * 6,
-          2.5 + Math.random() * 2,
-          (Math.random() - 0.5) * 6,
-          0.12 + Math.random() * 0.08,
-          0x38bdf8,
-          0.5
-        );
-        meshes.push(sp);
+  var FORGE_LEVELS = {
+    1: {
+      name: 'PowerShell Downloader',
+      intel: {
+        ip: '10.44.2.91',
+        cve: 'CVE-2021-26855',
+        mitre: 'T1059.001',
+        tool: 'Sysmon',
+        ts: '2026-05-24T21:02:14Z',
+        malicious: { field: 'process.command_line', condition: 'contains', value: 'IEX(New-Object Net.WebClient).DownloadString', count: 7 },
+        benign: { field: 'process.command_line', condition: 'contains', value: 'Get-Process', count: 12 }
+      }
+    },
+    2: {
+      name: 'Encoded Script Launch',
+      intel: {
+        ip: '10.51.7.44',
+        cve: 'CVE-2024-21413',
+        mitre: 'T1027',
+        tool: 'Defender for Endpoint',
+        ts: '2026-05-24T21:18:07Z',
+        malicious: { field: 'process.command_line', condition: 'contains', value: ' -enc ', count: 5 },
+        benign: { field: 'process.command_line', condition: 'contains', value: 'powershell -file cleanup.ps1', count: 4 }
+      }
+    },
+    3: {
+      name: 'Suspicious Rundll32',
+      intel: {
+        ip: '172.19.12.222',
+        cve: 'CVE-2023-23397',
+        mitre: 'T1218.011',
+        tool: 'Sigma Correlator',
+        ts: '2026-05-24T21:33:53Z',
+        malicious: { field: 'process.image', condition: 'endswith', value: 'rundll32.exe', count: 11 },
+        benign: { field: 'process.image', condition: 'endswith', value: 'explorer.exe', count: 140 }
+      }
+    },
+    4: {
+      name: 'Credential Dump Chain',
+      intel: {
+        ip: '192.168.88.19',
+        cve: 'CVE-2022-30190',
+        mitre: 'T1003.001',
+        tool: 'YARA-Live',
+        ts: '2026-05-24T21:49:26Z',
+        malicious: { field: 'process.command_line', condition: 'contains', value: 'sekurlsa::logonpasswords', count: 3 },
+        benign: { field: 'process.command_line', condition: 'contains', value: 'whoami /groups', count: 9 }
       }
     }
-    if (level >= 3) {
-      var alert = engine.addBox(0, 2.0, -2, 2.5, 0.15, 0.1, 0x7f1d1d, 0);
-      alert.material.emissive = new THREE.Color(0xff0000);
-      alert.material.emissiveIntensity = 0.4 + level * 0.05;
-      meshes.push(alert);
-    }
-    narrateLevel(level, shell);
-    bindActionButtons(shell, level);
+  };
+
+  var STORY_BEATS = {
+    1: [
+      '2026-05-24T21:02:14Z | SRC 10.44.2.91 | CVE-2021-26855 pre-auth chain opens command execution.',
+      '2026-05-24T21:02:37Z | MITRE T1059.001 command and script interpreter events spike.',
+      '2026-05-24T21:02:58Z | Tool signal: Sysmon EventID 1 populated with full command lines.',
+      '2026-05-24T21:03:19Z | Malicious sample includes IEX(New-Object Net.WebClient).DownloadString.',
+      '2026-05-24T21:03:41Z | Benign admin sample runs Get-Process for inventory baseline.',
+      '2026-05-24T21:04:03Z | Rule objective: catch downloader execution while avoiding benign process listing.',
+      '2026-05-24T21:04:25Z | Analyst action required: submit detection field, condition, and threshold.'
+    ],
+    2: [
+      '2026-05-24T21:18:07Z | SRC 10.51.7.44 | CVE-2024-21413 follow-on payload observed.',
+      '2026-05-24T21:18:33Z | MITRE T1027 obfuscated payload indicators mapped.',
+      '2026-05-24T21:18:55Z | Tool signal: Defender process tree notes encoded command usage.',
+      '2026-05-24T21:19:20Z | Malicious sample includes powershell command with -enc fragment.',
+      '2026-05-24T21:19:46Z | Benign automation runs powershell -file cleanup.ps1 nightly.',
+      '2026-05-24T21:20:11Z | Rule objective: detect encoded launch behavior, ignore scripted maintenance.',
+      '2026-05-24T21:20:34Z | Analyst action required: craft precise detection values and threshold.'
+    ],
+    3: [
+      '2026-05-24T21:33:53Z | SRC 172.19.12.222 | CVE-2023-23397 activity triggers execution chain.',
+      '2026-05-24T21:34:14Z | MITRE T1218.011 signed binary proxy execution appears.',
+      '2026-05-24T21:34:36Z | Tool signal: Sigma correlator groups repeated rundll32 ancestry.',
+      '2026-05-24T21:35:02Z | Malicious sample image terminates with rundll32.exe.',
+      '2026-05-24T21:35:24Z | Benign sample image terminates with explorer.exe.',
+      '2026-05-24T21:35:47Z | Rule objective: detect suspicious binary usage without GUI process noise.',
+      '2026-05-24T21:36:11Z | Analyst action required: submit rule inputs and validate sample outcomes.'
+    ],
+    4: [
+      '2026-05-24T21:49:26Z | SRC 192.168.88.19 | CVE-2022-30190 chain enters credential access stage.',
+      '2026-05-24T21:49:52Z | MITRE T1003.001 LSASS credential dump intent identified.',
+      '2026-05-24T21:50:16Z | Tool signal: YARA-Live commandline signatures report sekurlsa tokens.',
+      '2026-05-24T21:50:39Z | Malicious sample contains sekurlsa::logonpasswords keyword.',
+      '2026-05-24T21:51:03Z | Benign sample runs whoami /groups for access checks.',
+      '2026-05-24T21:51:27Z | Rule objective: catch credential dump attempts with low false positives.',
+      '2026-05-24T21:51:49Z | Analyst action required: finalize field, condition, value, threshold.'
+    ],
+    5: [
+      '2026-05-24T22:03:22Z | Detection summary compilation starts.',
+      '2026-05-24T22:03:46Z | MITRE mappings include T1059.001, T1027, T1218.011, T1003.001.',
+      '2026-05-24T22:04:08Z | CVE chain confirmed: CVE-2021-26855, CVE-2024-21413, CVE-2023-23397, CVE-2022-30190.',
+      '2026-05-24T22:04:32Z | Tool outputs aggregated from Sysmon, Defender, Sigma Correlator, YARA-Live.',
+      '2026-05-24T22:04:54Z | Rule effectiveness report generated with malicious-vs-benign outcomes.',
+      '2026-05-24T22:05:18Z | Playbook reviewers request final sign-off.',
+      '2026-05-24T22:05:40Z | Operator action required: run debrief.'
+    ]
+  };
+
+  function ensureExtras(shell) {
+    var extras = shell.levelState.extras || {};
+    if (!extras.rule) extras.rule = { field: '', condition: '', value: '', threshold: '' };
+    if (!extras.maliciousCaught) extras.maliciousCaught = false;
+    if (!extras.benignIgnored) extras.benignIgnored = false;
+    if (!extras.evaluationDone) extras.evaluationDone = false;
+    if (!extras.failures) extras.failures = 0;
+    if (!extras.history) extras.history = [];
+    shell.levelState.extras = extras;
+    return extras;
   }
 
-  function bindActionButtons(shell, level) {
-    var wrap = document.getElementById('action-btns');
-    wrap.innerHTML = '';
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'act-btn';
-      b.textContent = 'Begin debrief';
-      b.onclick = function () { shell.runEpilogue(); };
-      wrap.appendChild(b);
-      return;
-    }
-    actionDefs.forEach(function (a) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'act-btn';
-      btn.textContent = a.label;
-      btn.onclick = function () { onAction(a.action, shell, level); };
-      wrap.appendChild(btn);
-    });
-  }
-
-  function onAction(action, shell, level) {
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) return;
-    var log = document.getElementById('action-log');
-    log.textContent += '> ' + action + '\n';
-    var seq = def.taskSequence || [{ action: def.action, hint: def.hint }];
-    var idx = shell.levelState.taskIdx || 0;
-    var expected = seq[idx];
-    if (expected && action === expected.action) {
-      score += 80 + level * 20;
-      updateScoreDisplay();
-      shell.appendOut('[SUCCESS] ' + expected.hint);
-      shell.levelState.taskIdx = idx + 1;
-      if (shell.levelState.taskIdx >= seq.length) {
-        shell.onLevelTasksComplete();
-      } else {
-        shell.setTaskText('Step ' + (shell.levelState.taskIdx + 1) + '/' + seq.length + ': ' + seq[shell.levelState.taskIdx].hint);
-      }
-    } else {
-      HabibiProgression.logFailure(GAME_ID, level, 'wrong_action', shell.state);
-      var n = HabibiProgression.getFailureCount(GAME_ID, level, 'wrong_action', shell.state);
-      var fb = HabibiLearning.getFailureFeedback(GAME_ID, level, 'wrong_command', n);
-      var need = expected ? expected.action : def.action;
-      shell.appendOut('[FAIL] Expected: ' + need);
-      if (fb) shell.appendOut('[TUTOR] ' + fb);
-      else shell.appendOut('[TUTOR] Step ' + (idx + 1) + ' requires ' + need + '.');
-    }
+  function norm(value) {
+    return String(value || '').trim().toLowerCase();
   }
 
   function updateScoreDisplay() {
@@ -189,213 +134,624 @@
     if (el) el.textContent = 'SCORE ' + score;
   }
 
-  function startSpeedTrial(shell) {
-    var start = Date.now();
-    var idx = 0;
-    var seq = actionDefs.slice(0, Math.min(5, actionDefs.length));
-    shell.appendOut('[SKILL] Execute: ' + seq.map(function (s) { return s.action; }).join(' → '));
-    function tryAction(action) {
-      if (idx >= seq.length) return;
-      if (action === seq[idx].action) {
-        idx++;
-        if (idx >= seq.length) {
-          var sc = Math.max(0, 900 - Math.floor((Date.now() - start) / 100));
-          shell.submitScore('speedTrial', sc);
-          shell.appendOut('[SKILL] Speed trial score: ' + sc);
-        }
+  function addPoints(shell, value, reason) {
+    score += value;
+    shell.score += value;
+    updateScoreDisplay();
+    shell.appendOut('[POINTS] +' + value + ' ' + reason + ' | total ' + score);
+  }
+
+  function logStory(shell, level) {
+    var beats = STORY_BEATS[level] || [];
+    var i;
+    for (i = 0; i < beats.length; i++) shell.appendOut('[INTEL] ' + beats[i]);
+  }
+
+  function showInputs() {
+    var form = document.getElementById('term-form');
+    var buttons = document.getElementById('action-btns');
+    if (form) form.classList.remove('hidden');
+    if (buttons) buttons.classList.remove('hidden');
+  }
+
+  function ruleMatchesSample(rule, sample) {
+    var fieldMatch = norm(rule.field) === norm(sample.field);
+    var conditionMatch = norm(rule.condition) === norm(sample.condition);
+    var valueMatch = norm(rule.value) === norm(sample.value);
+    var thresholdValue = Number(rule.threshold);
+    if (!isFinite(thresholdValue)) return false;
+    var thresholdMatch = thresholdValue <= sample.count;
+    return fieldMatch && conditionMatch && valueMatch && thresholdMatch;
+  }
+
+  function evaluateRule(shell, level) {
+    var intel = FORGE_LEVELS[level] && FORGE_LEVELS[level].intel;
+    var extras = ensureExtras(shell);
+    if (!intel) return;
+
+    var maliciousHit = ruleMatchesSample(extras.rule, intel.malicious);
+    var benignHit = ruleMatchesSample(extras.rule, intel.benign);
+    extras.maliciousCaught = maliciousHit;
+    extras.benignIgnored = !benignHit;
+    extras.evaluationDone = true;
+    extras.history.push({
+      at: Date.now(),
+      rule: {
+        field: extras.rule.field,
+        condition: extras.rule.condition,
+        value: extras.rule.value,
+        threshold: extras.rule.threshold
+      },
+      maliciousHit: maliciousHit,
+      benignHit: benignHit
+    });
+
+    shell.appendOut('[EVAL] malicious_match=' + maliciousHit + ' benign_match=' + benignHit);
+    if (maliciousHit && !benignHit) {
+      addPoints(shell, 120, 'effective detection rule');
+      shell.appendOut('[SUCCESS] Rule catches malicious sample and ignores benign sample.');
+    } else {
+      extras.failures += 1;
+      HabibiProgression.logFailure(GAME_ID, level, 'bad_rule', shell.state);
+      shell.appendOut('[FAIL] Rule quality insufficient. It must catch bad sample and skip good sample.');
+      shell.appendOut('[HINT] Use exact field/condition/value from malicious sample and balanced threshold.');
+    }
+    shell.processCommand('check');
+  }
+
+  function parseRuleInput(shell, raw) {
+    var extras = ensureExtras(shell);
+    var text = String(raw || '').trim();
+    var lower = text.toLowerCase();
+    var parts;
+    if (lower.indexOf('field:') === 0) {
+      extras.rule.field = text.slice(6).trim();
+      shell.appendOut('[RULE] field=' + extras.rule.field);
+      return !0;
+    }
+    if (lower.indexOf('condition:') === 0) {
+      extras.rule.condition = text.slice(10).trim();
+      shell.appendOut('[RULE] condition=' + extras.rule.condition);
+      return !0;
+    }
+    if (lower.indexOf('value:') === 0) {
+      extras.rule.value = text.slice(6).trim();
+      shell.appendOut('[RULE] value=' + extras.rule.value);
+      return !0;
+    }
+    if (lower.indexOf('threshold:') === 0) {
+      extras.rule.threshold = text.slice(10).trim();
+      shell.appendOut('[RULE] threshold=' + extras.rule.threshold);
+      return !0;
+    }
+    if (lower.indexOf('rule ') === 0) {
+      parts = text.slice(5).split('|');
+      if (parts.length === 4) {
+        extras.rule.field = parts[0].trim();
+        extras.rule.condition = parts[1].trim();
+        extras.rule.value = parts[2].trim();
+        extras.rule.threshold = parts[3].trim();
+        shell.appendOut('[RULE] Parsed inline rule fields.');
+        return !0;
       }
     }
-    shell._speedTrialHook = tryAction;
+    return false;
   }
 
-  function startAccuracyGauntlet(shell) {
-    var sc = 850;
-    shell.submitScore('accuracyGauntlet', sc);
-    shell.appendOut('[SKILL] Accuracy gauntlet score: ' + sc);
+  function renderActionButtons(shell, level) {
+    var wrap = document.getElementById('action-btns');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (level === 5) {
+      var debrief = document.createElement('button');
+      debrief.type = 'button';
+      debrief.className = 'act-btn';
+      debrief.textContent = 'RUN DEBRIEF';
+      debrief.onclick = function () { shell.runEpilogue(); };
+      wrap.appendChild(debrief);
+      return;
+    }
+
+    appendActionButton(wrap, 'SHOW SAMPLE', function () { showSamples(shell, level); });
+    appendActionButton(wrap, 'EVALUATE RULE', function () { evaluateRule(shell, level); });
+    appendActionButton(wrap, 'CLEAR RULE', function () {
+      var extras = ensureExtras(shell);
+      extras.rule = { field: '', condition: '', value: '', threshold: '' };
+      extras.evaluationDone = false;
+      extras.maliciousCaught = false;
+      extras.benignIgnored = false;
+      shell.appendOut('[RULE] Cleared.');
+    });
   }
 
-  function startDecisionTree(shell) {
-    var gained = 600;
-    shell.appendOut('[TREE] Decision tree complete — optimal playbook path recorded.');
-    shell.submitScore('decisionTree', gained);
+  function appendActionButton(wrap, label, handler) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'act-btn';
+    button.textContent = label;
+    button.onclick = handler;
+    wrap.appendChild(button);
+  }
+
+  function showSamples(shell, level) {
+    var intel = FORGE_LEVELS[level] && FORGE_LEVELS[level].intel;
+    if (!intel) return;
+    shell.appendOut('[SAMPLE:bad] field=' + intel.malicious.field + ' condition=' + intel.malicious.condition + ' value=' + intel.malicious.value + ' count=' + intel.malicious.count);
+    shell.appendOut('[SAMPLE:good] field=' + intel.benign.field + ' condition=' + intel.benign.condition + ' value=' + intel.benign.value + ' count=' + intel.benign.count);
+    shell.appendOut('[INPUT] Set rule using "field:", "condition:", "value:", "threshold:".');
+  }
+
+  function buildScene(engine, level, shell) {
+    var i;
+    if (engine.clearPhysics) engine.clearPhysics();
+    meshes = [];
+    glow = 0;
+
+    engine.addFloor(18, 18, 0x08110b);
+    var forgeCore = engine.addBox(0, 0.6, 0, 1.7, 1.2, 1.7, 0x1f2937, 0);
+    forgeCore.material.emissive = new THREE.Color(0x16a34a);
+    forgeCore.material.emissiveIntensity = 0.22;
+    forgeCore.userData.kind = 'core';
+    meshes.push(forgeCore);
+
+    for (i = 0; i < 7 + level * 2; i++) {
+      var shard = engine.addBox(
+        (Math.random() - 0.5) * 10,
+        0.8 + Math.random() * 1.8,
+        (Math.random() - 0.5) * 10,
+        0.34,
+        0.34,
+        0.34,
+        0x22c55e + i * 400,
+        0.22 + level * 0.04
+      );
+      shard.userData.kind = 'shard';
+      meshes.push(shard);
+    }
+
+    for (i = 0; i < level + 2; i++) {
+      var rail = engine.addBox(
+        (Math.random() - 0.5) * 8,
+        2 + Math.random() * 1.2,
+        (Math.random() - 0.5) * 8,
+        1.1,
+        0.05,
+        0.2,
+        0x86efac,
+        0
+      );
+      rail.material.emissive = new THREE.Color(0x4ade80);
+      rail.material.emissiveIntensity = 0.18;
+      rail.userData.kind = 'rail';
+      meshes.push(rail);
+    }
+
+    if (engine.addPhysicsSphere) {
+      for (i = 0; i < level + 5; i++) {
+        var droplet = engine.addPhysicsSphere(
+          (Math.random() - 0.5) * 9,
+          2 + Math.random() * 2.5,
+          (Math.random() - 0.5) * 9,
+          0.1 + Math.random() * 0.09,
+          0x4ade80,
+          0.35
+        );
+        droplet.userData.kind = 'droplet';
+        meshes.push(droplet);
+      }
+    }
+
+    showInputs();
+    renderActionButtons(shell, level);
+    logStory(shell, level);
+    if (level <= 4) showSamples(shell, level);
+  }
+
+  function validateEffectiveRule(level, shell) {
+    var extras = ensureExtras(shell);
+    return extras.evaluationDone && extras.maliciousCaught && extras.benignIgnored;
+  }
+
+  function validateRuleSet(level, shell) {
+    var extras = ensureExtras(shell);
+    var rule = extras.rule;
+    return Boolean(rule.field && rule.condition && rule.value && rule.threshold);
+  }
+
+  function startRuleSprint(shell) {
+    var rounds = [
+      { field: 'process.command_line', condition: 'contains', value: ' -enc ', threshold: 3 },
+      { field: 'process.image', condition: 'endswith', value: 'rundll32.exe', threshold: 4 },
+      { field: 'process.command_line', condition: 'contains', value: 'sekurlsa::logonpasswords', threshold: 1 }
+    ];
+    runtime.skill = { id: 'ruleSprint', rounds: rounds, idx: 0, misses: 0, startMs: Date.now() };
+    shell.appendOut('[SKILL] Rule Sprint started. Input: field|condition|value|threshold');
+    shell.appendOut('[SKILL] Round 1/' + rounds.length + ' target=' + rounds[0].field + '|' + rounds[0].condition + '|' + rounds[0].value + '|' + rounds[0].threshold);
+  }
+
+  function startThresholdTuner(shell) {
+    runtime.skill = {
+      id: 'thresholdTuner',
+      cases: [
+        { bad: 8, good: 2, best: 3 },
+        { bad: 5, good: 1, best: 2 },
+        { bad: 12, good: 4, best: 5 },
+        { bad: 3, good: 0, best: 1 }
+      ],
+      idx: 0,
+      err: 0,
+      startMs: Date.now()
+    };
+    var case0 = runtime.skill.cases[0];
+    shell.appendOut('[SKILL] Threshold Tuner started. Choose threshold catching bad not good.');
+    shell.appendOut('[SKILL] Case 1: bad=' + case0.bad + ' good=' + case0.good);
+  }
+
+  function startSigmaPrecision(shell) {
+    runtime.skill = {
+      id: 'sigmaPrecision',
+      prompts: [
+        { txt: 'field for commandline matching?', ans: 'process.command_line' },
+        { txt: 'condition for suffix match?', ans: 'endswith' },
+        { txt: 'field for executable path?', ans: 'process.image' },
+        { txt: 'condition for substring?', ans: 'contains' }
+      ],
+      idx: 0,
+      correct: 0,
+      startMs: Date.now()
+    };
+    shell.appendOut('[SKILL] Sigma Precision started.');
+    shell.appendOut('[SKILL] ' + runtime.skill.prompts[0].txt);
+  }
+
+  function finishRuleSprint(shell, skill) {
+    var elapsed = Math.max(1, Math.floor((Date.now() - skill.startMs) / 1000));
+    var scoreValue = Math.max(160, 1050 - elapsed * 26 - skill.misses * 70);
+    shell.submitScore('ruleSprint', scoreValue);
+    shell.appendOut('[SKILL] Rule Sprint score=' + scoreValue + ' time=' + elapsed + 's misses=' + skill.misses);
+    runtime.skill = null;
+  }
+
+  function finishThresholdTuner(shell, skill) {
+    var elapsed = Math.max(1, Math.floor((Date.now() - skill.startMs) / 1000));
+    var scoreValue = Math.max(120, 980 - elapsed * 20 - skill.err * 60);
+    shell.submitScore('thresholdTuner', scoreValue);
+    shell.appendOut('[SKILL] Threshold Tuner score=' + scoreValue);
+    runtime.skill = null;
+  }
+
+  function finishSigmaPrecision(shell, skill) {
+    var elapsed = Math.max(1, Math.floor((Date.now() - skill.startMs) / 1000));
+    var accuracy = skill.correct / skill.prompts.length;
+    var scoreValue = Math.max(120, Math.floor(accuracy * 940) - elapsed * 10);
+    shell.submitScore('sigmaPrecision', scoreValue);
+    shell.appendOut('[SKILL] Sigma Precision score=' + scoreValue + ' accuracy=' + Math.round(accuracy * 100) + '%');
+    runtime.skill = null;
+  }
+
+  function handleSkillInput(shell, raw) {
+    var skill = runtime.skill;
+    var text = String(raw || '').trim();
+    var parts;
+    if (!skill) return;
+
+    if (skill.id === 'ruleSprint') {
+      parts = text.split('|');
+      if (parts.length !== 4) {
+        skill.misses += 1;
+        shell.appendOut('[SKILL] Format must be field|condition|value|threshold');
+        return;
+      }
+      var target = skill.rounds[skill.idx];
+      var ok =
+        norm(parts[0]) === norm(target.field) &&
+        norm(parts[1]) === norm(target.condition) &&
+        norm(parts[2]) === norm(target.value) &&
+        Number(parts[3]) === target.threshold;
+      if (!ok) skill.misses += 1;
+      else skill.idx += 1;
+      if (skill.idx >= skill.rounds.length) finishRuleSprint(shell, skill);
+      else {
+        var next = skill.rounds[skill.idx];
+        shell.appendOut('[SKILL] Next target=' + next.field + '|' + next.condition + '|' + next.value + '|' + next.threshold);
+      }
+      return;
+    }
+
+    if (skill.id === 'thresholdTuner') {
+      var n = Number(text);
+      var item = skill.cases[skill.idx];
+      if (!isFinite(n)) {
+        shell.appendOut('[SKILL] Threshold must be numeric.');
+        skill.err += 1;
+        return;
+      }
+      if (n !== item.best) skill.err += 1;
+      skill.idx += 1;
+      if (skill.idx >= skill.cases.length) finishThresholdTuner(shell, skill);
+      else {
+        var nextCase = skill.cases[skill.idx];
+        shell.appendOut('[SKILL] Case ' + (skill.idx + 1) + ': bad=' + nextCase.bad + ' good=' + nextCase.good);
+      }
+      return;
+    }
+
+    if (skill.id === 'sigmaPrecision') {
+      var prompt = skill.prompts[skill.idx];
+      if (norm(text) === norm(prompt.ans)) skill.correct += 1;
+      skill.idx += 1;
+      if (skill.idx >= skill.prompts.length) finishSigmaPrecision(shell, skill);
+      else shell.appendOut('[SKILL] ' + skill.prompts[skill.idx].txt);
+    }
+  }
+
+  function setLevelTaskText(shell, level) {
+    if (level === 5) {
+      shell.setTaskText('Debrief phase: click RUN DEBRIEF or type run debrief.');
+      return;
+    }
+    shell.setTaskText('Define rule field/condition/value/threshold, then evaluate against samples.');
   }
 
   var config = {
     gameId: GAME_ID,
     title: 'THE FORGE',
     achievementId: 'forge_master',
-    leaderboardChallenge: 'speedTrial',
-    engine: { bg: 0x030a04, physics: true },
-    moveSpeed: 2.4,
+    leaderboardChallenge: 'ruleSprint',
+    engine: { bg: 0x04120a, physics: true },
+    moveSpeed: 2.3,
     buildScene: buildScene,
     levels: {
-    1: {
-      name: 'Rule Template',
-      hint: 'Assemble trigger + filter from template',
-      action: 'ADD TRIGGER',
-      taskSequence: [
-        { action: 'ADD TRIGGER', hint: 'Context pass — run ADD TRIGGER on incoming telemetry' },
-        { action: 'ADD TRIGGER', hint: 'Assemble trigger + filter from template' }
-      ],
-      tasks: [{
-        id: 'L1_main',
-        hint: 'Assemble trigger + filter from template',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] ADD TRIGGER — Assemble trigger + filter from template',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 1 (5 paths)',
-        desc: 'Your Detection rule construction choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_1', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_1', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_1', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_1', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_1', label: 'Isolate affected segment conservatively' }
+      1: {
+        name: 'PowerShell Downloader',
+        hint: 'Build rule for downloader behavior.',
+        timeLimit: 300,
+        tasks: [
+          {
+            id: 'l1_rule_set',
+            hint: 'Set field/condition/value/threshold inputs.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateRuleSet(1, shell); },
+            output: '[TASK] Rule fields accepted.'
+          },
+          {
+            id: 'l1_rule_eval',
+            hint: 'Evaluate and ensure bad sample hit + good sample ignored.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateEffectiveRule(1, shell); },
+            output: '[TASK] Rule evaluation accepted.'
+          }
+        ],
+        branch: {
+          title: 'Deployment Strategy',
+          desc: 'Choose rollout strategy after first valid rule.',
+          options: [
+            { id: 'forge_l1_fast', label: 'Deploy immediately to all endpoints.' },
+            { id: 'forge_l1_canary', label: 'Canary deploy to high-risk servers first.' },
+            { id: 'forge_l1_shadow', label: 'Run in shadow mode for telemetry only.' },
+            { id: 'forge_l1_hunt', label: 'Use as hunt query before alerting.' },
+            { id: 'forge_l1_tiered', label: 'Stage by business criticality tiers.' }
+          ]
+        }
+      },
+      2: {
+        name: 'Encoded Script Launch',
+        hint: 'Catch encoded script executions.',
+        timeLimit: 320,
+        tasks: [
+          {
+            id: 'l2_rule_set',
+            hint: 'Populate all rule fields.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateRuleSet(2, shell); },
+            output: '[TASK] Rule fields accepted.'
+          },
+          {
+            id: 'l2_rule_eval',
+            hint: 'Validate rule behavior on samples.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateEffectiveRule(2, shell); },
+            output: '[TASK] Rule evaluation accepted.'
+          }
+        ],
+        branch: {
+          title: 'Noise Handling',
+          desc: 'Choose approach for tuning encoded-command detections.',
+          options: [
+            { id: 'forge_l2_strict', label: 'Raise strict severity for any encoded token.' },
+            { id: 'forge_l2_context', label: 'Require parent-process context before alert.' },
+            { id: 'forge_l2_count', label: 'Use count threshold to suppress one-offs.' },
+            { id: 'forge_l2_user', label: 'Scope alerts to non-admin users first.' },
+            { id: 'forge_l2_time', label: 'Prioritize off-hours encoded execution.' }
+          ]
+        }
+      },
+      3: {
+        name: 'Suspicious Rundll32',
+        hint: 'Detect suspicious rundll32 usage.',
+        timeLimit: 340,
+        tasks: [
+          {
+            id: 'l3_rule_set',
+            hint: 'Set full rule payload.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateRuleSet(3, shell); },
+            output: '[TASK] Rule fields accepted.'
+          },
+          {
+            id: 'l3_rule_eval',
+            hint: 'Ensure malicious hit and benign miss.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateEffectiveRule(3, shell); },
+            output: '[TASK] Rule evaluation accepted.'
+          }
+        ],
+        branch: {
+          title: 'Proxy Execution Response',
+          desc: 'Choose containment strategy for signed binary abuse.',
+          options: [
+            { id: 'forge_l3_block', label: 'Block rundll32 child process chains.' },
+            { id: 'forge_l3_parent', label: 'Alert only on suspicious parent pairs.' },
+            { id: 'forge_l3_cmdline', label: 'Gate on commandline DLL patterns.' },
+            { id: 'forge_l3_hunt', label: 'Pivot into historical process lineage.' },
+            { id: 'forge_l3_isolate', label: 'Isolate hosts with repeated proxy execution.' }
+          ]
+        }
+      },
+      4: {
+        name: 'Credential Dump Chain',
+        hint: 'Detect credential dumping commands.',
+        timeLimit: 370,
+        tasks: [
+          {
+            id: 'l4_rule_set',
+            hint: 'Set rule field, condition, value, threshold.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateRuleSet(4, shell); },
+            output: '[TASK] Rule fields accepted.'
+          },
+          {
+            id: 'l4_rule_eval',
+            hint: 'Evaluate against malicious and benign sample.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateEffectiveRule(4, shell); },
+            output: '[TASK] Rule evaluation accepted.'
+          }
         ]
-      }
-    }
-    2: {
-      name: 'False Positive Tune',
-      hint: 'Reduce noise below 10% FP rate',
-      action: 'TUNE THRESH', timeLimit: 300,
-      taskSequence: [
-        { action: 'ADD FILTER', hint: 'Context pass — run ADD FILTER on incoming telemetry' },
-        { action: 'TUNE THRESH', hint: 'Reduce noise below 10% FP rate' }
-      ],
-      tasks: [{
-        id: 'L2_main',
-        hint: 'Reduce noise below 10% FP rate',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] TUNE THRESH — Reduce noise below 10% FP rate',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 2 (5 paths)',
-        desc: 'Your Detection rule construction choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_2', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_2', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_2', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_2', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_2', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    3: {
-      name: 'Correlation Chain',
-      hint: 'Link two events into one rule',
-      action: 'ADD FILTER', timeLimit: 360,
-      taskSequence: [
-        { action: 'EXPORT JSON', hint: 'Pre-check — validate environment baseline' },
-        { action: 'TEST RULE', hint: 'Context pass — run TEST RULE on incoming telemetry' },
-        { action: 'ADD FILTER', hint: 'Link two events into one rule' }
-      ],
-      tasks: [{
-        id: 'L3_main',
-        hint: 'Link two events into one rule',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] ADD FILTER — Link two events into one rule',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 3 (5 paths)',
-        desc: 'Your Detection rule construction choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_3', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_3', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_3', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_3', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_3', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    4: {
-      name: 'Live Validation',
-      hint: 'Rule must catch sample malicious event',
-      action: 'TEST RULE', timeLimit: 420,
-      taskSequence: [
-        { action: 'ADD TRIGGER', hint: 'Pre-check — validate environment baseline' },
-        { action: 'TUNE THRESH', hint: 'Context pass — run TUNE THRESH on incoming telemetry' },
-        { action: 'TEST RULE', hint: 'Rule must catch sample malicious event' }
-      ],
-      tasks: [{
-        id: 'L4_main',
-        hint: 'Rule must catch sample malicious event',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] TEST RULE — Rule must catch sample malicious event',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }]
-    }
-    5: { name: 'Deploy Sign-off', epilogue: true }
+      },
+      5: { name: 'Forge Debrief', epilogue: true }
     },
     skills: [
-      { id: 'speedTrial', name: 'Speed Trial', unlockAfter: 1, desc: 'Chain operator actions quickly', start: startSpeedTrial },
-      { id: 'accuracyGauntlet', name: 'Accuracy Gauntlet', unlockAfter: 2, desc: 'Zero-error action sequence', start: startAccuracyGauntlet },
-      { id: 'decisionTree', name: 'Decision Tree', unlockAfter: 3, desc: 'Pick optimal playbook steps', start: startDecisionTree }
+      {
+        id: 'ruleSprint',
+        name: 'Rule Sprint',
+        unlockAfter: 1,
+        desc: 'Rapidly recreate exact detection tuples.',
+        start: startRuleSprint
+      },
+      {
+        id: 'thresholdTuner',
+        name: 'Threshold Tuner',
+        unlockAfter: 2,
+        desc: 'Pick effective thresholds under pressure.',
+        start: startThresholdTuner
+      },
+      {
+        id: 'sigmaPrecision',
+        name: 'Sigma Precision',
+        unlockAfter: 3,
+        desc: 'Answer sigma-style field/condition prompts.',
+        start: startSigmaPrecision
+      }
     ],
-    onLevelStart: function (n, shell) {
-      shell.levelState.taskIdx = 0;
-      var def = shell.config.levels[n];
-      var seq = def.taskSequence || [{ hint: def.hint }];
-      shell.setTaskText('Step 1/' + seq.length + ': ' + (seq[0].hint || def.hint));
-      score += n * 10;
-      updateScoreDisplay();
-      narrateLevel(n, shell);
+    onLevelStart: function (level, shell) {
+      var extras = ensureExtras(shell);
+      extras.rule = { field: '', condition: '', value: '', threshold: '' };
+      extras.maliciousCaught = false;
+      extras.benignIgnored = false;
+      extras.evaluationDone = false;
+      extras.history = [];
+      runtime.levelStartMs = Date.now();
+      setLevelTaskText(shell, level);
+      addPoints(shell, 14 + level * 4, 'level start');
     },
-    onLevelComplete: function (lv, shell) {
-      var b = STORY_BEATS[lv];
-      if (b) shell.appendOut('[NARRATIVE] ' + b.closing);
+    onLevelComplete: function (level, shell) {
+      if (level <= 4) shell.appendOut('[REPORT] Rule quality accepted for case ' + level + '.');
+      if (level === 4) shell.appendOut('[REPORT] Detection pack complete and ready for review.');
     }
   };
 
-  config.onTick = function (dt, shell) {
-    meshes.forEach(function (m) {
-      if (m.userData && m.userData.physicsBody && m.userData.physicsBody.mass > 0) return;
-      if (m.userData && m.userData.particle) {
-        m.position.y += Math.sin(Date.now() * 0.002 + m.position.x) * dt * 0.3;
+  config.onTick = function (dt) {
+    var i;
+    glow += dt * 2.2;
+    for (i = 0; i < meshes.length; i++) {
+      var mesh = meshes[i];
+      if (!mesh || !mesh.userData) continue;
+      if (mesh.userData.physicsBody && mesh.userData.physicsBody.mass > 0) continue;
+      if (mesh.userData.kind === 'shard') {
+        mesh.rotation.y += dt * 0.36;
+        mesh.position.y += Math.sin(glow + i * 0.3) * dt * 0.32;
       }
-    });
+      if (mesh.userData.kind === 'rail') {
+        mesh.rotation.z += dt * 0.14;
+      }
+      if (mesh.userData.kind === 'core') {
+        mesh.material.emissiveIntensity = 0.18 + Math.abs(Math.sin(glow)) * 0.3;
+      }
+    }
   };
 
   document.addEventListener('DOMContentLoaded', function () {
+    var shell;
+    var taskText = document.getElementById('task-text');
+    var actionLog = document.getElementById('action-log');
+    var form = document.getElementById('term-form');
+    var input = document.getElementById('term-in');
+
     if (!HabibiProgression.isGameUnlocked(GAME_ID) && GAME_ID !== 'the_terminal') {
-      var st = HabibiProgression.load(GAME_ID);
-      if (!st.unlocked) {
-        document.getElementById('task-text').textContent = 'Module locked — complete previous game epilogue first.';
+      var state = HabibiProgression.load(GAME_ID);
+      if (!state.unlocked) {
+        if (taskText) taskText.textContent = 'Module locked — complete previous game epilogue first.';
         return;
       }
     }
-    var shell = new HabibiGameShell(config);
+
+    shell = new HabibiGameShell(config);
     shell.score = 0;
     shell.updateScore = updateScoreDisplay;
-    shell.appendOut = function (t) {
-      var el = document.getElementById('action-log');
-      el.textContent += t + '\n';
-      el.scrollTop = el.scrollHeight;
+    shell.appendOut = function (text) {
+      if (!actionLog) return;
+      actionLog.textContent += text + '\n';
+      actionLog.scrollTop = actionLog.scrollHeight;
     };
-    shell.setTaskText = function (t) { document.getElementById('task-text').textContent = t; };
+    shell.setTaskText = function (text) {
+      if (taskText) taskText.textContent = text;
+    };
+
+    shell.onCommand = function (cmd, activeShell) {
+      if (runtime.skill) {
+        handleSkillInput(activeShell, cmd);
+        return;
+      }
+      if (norm(cmd) === 'evaluate') {
+        evaluateRule(activeShell, activeShell.state.currentLevel);
+        return;
+      }
+      if (norm(cmd) === 'samples') {
+        showSamples(activeShell, activeShell.state.currentLevel);
+        return;
+      }
+      if (norm(cmd) === 'status') {
+        var extras = ensureExtras(activeShell);
+        activeShell.appendOut('[STATUS] field=' + extras.rule.field + ' condition=' + extras.rule.condition + ' value=' + extras.rule.value + ' threshold=' + extras.rule.threshold);
+        activeShell.appendOut('[STATUS] maliciousCaught=' + extras.maliciousCaught + ' benignIgnored=' + extras.benignIgnored);
+        return;
+      }
+      if (activeShell.state.currentLevel === 5 && norm(cmd) === 'run debrief') {
+        activeShell.runEpilogue();
+        return;
+      }
+      if (!parseRuleInput(activeShell, cmd)) {
+        activeShell.appendOut('[CMD] Unknown input. Use field:/condition:/value:/threshold: or "rule a|b|c|d".');
+      } else {
+        activeShell.processCommand('check');
+      }
+    };
+
     shell.init();
+    showInputs();
+    updateScoreDisplay();
+
+    if (form && input) {
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        var text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        shell.appendOut('> ' + text);
+        shell.onCommand(text, shell);
+      }, true);
+    }
   });
 })();
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */

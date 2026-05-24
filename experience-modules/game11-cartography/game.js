@@ -1,223 +1,331 @@
 /**
- * CARTOGRAPHY — 3D Experience Module (enhanced)
- * Core concept: Global threat actor tracking
- * Threat globe — arcs, actors, attribution
- * Physics: Cannon-es via HabibiPhysics | Branches: 15 (5×L1–3) | Tasks: multi-step per level
+ * CARTOGRAPHY — 3D Experience Module
+ * Core concept: Attribution-led geospatial targeting
+ * Mechanic: Raycast-select correct globe region nodes per level data
  */
 (function () {
   'use strict';
 
   var GAME_ID = 'the_cartography';
   var score = 0;
-  var meshes = [];
-  var actionDefs = [
-    { id: 'filter_layer', label: 'FILTER LAYER', action: 'FILTER LAYER' },
-    { id: 'select_arc', label: 'SELECT ARC', action: 'SELECT ARC' },
-    { id: 'attribute', label: 'ATTRIBUTE', action: 'ATTRIBUTE' },
-    { id: 'predict_target', label: 'PREDICT TARGET', action: 'PREDICT TARGET' },
-    { id: 'brief', label: 'BRIEF', action: 'BRIEF' },
-  ];
+  var regionMeshes = [];
+  var globeShell = null;
+  var levelStart = 0;
 
-  var STORY_BEATS = {
-    1: {
-      title: 'Globe Orientation',
-      opening: 'Meridian-7 briefing: Identify actor origin regions',
-      beat1: 'Operator log L1-1: Global threat actor tracking — Globe Orientation phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L1-2: Global threat actor tracking — Globe Orientation phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L1-3: Global threat actor tracking — Globe Orientation phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L1-4: Global threat actor tracking — Globe Orientation phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L1-5: Global threat actor tracking — Globe Orientation phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L1-6: Global threat actor tracking — Globe Orientation phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L1-7: Global threat actor tracking — Globe Orientation phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 1 objective satisfied via FILTER LAYER.'
-    },
-    2: {
-      title: 'Arc Analysis',
-      opening: 'Meridian-7 briefing: Inspect attack arc metadata',
-      beat1: 'Operator log L2-1: Global threat actor tracking — Arc Analysis phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L2-2: Global threat actor tracking — Arc Analysis phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L2-3: Global threat actor tracking — Arc Analysis phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L2-4: Global threat actor tracking — Arc Analysis phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L2-5: Global threat actor tracking — Arc Analysis phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L2-6: Global threat actor tracking — Arc Analysis phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L2-7: Global threat actor tracking — Arc Analysis phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 2 objective satisfied via SELECT ARC.'
-    },
-    3: {
-      title: 'TTP Match',
-      opening: 'Meridian-7 briefing: Match indicators to actor profile',
-      beat1: 'Operator log L3-1: Global threat actor tracking — TTP Match phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L3-2: Global threat actor tracking — TTP Match phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L3-3: Global threat actor tracking — TTP Match phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L3-4: Global threat actor tracking — TTP Match phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L3-5: Global threat actor tracking — TTP Match phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L3-6: Global threat actor tracking — TTP Match phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L3-7: Global threat actor tracking — TTP Match phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 3 objective satisfied via ATTRIBUTE.'
-    },
-    4: {
-      title: 'Forecast',
-      opening: 'Meridian-7 briefing: Predict next likely target region',
-      beat1: 'Operator log L4-1: Global threat actor tracking — Forecast phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L4-2: Global threat actor tracking — Forecast phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L4-3: Global threat actor tracking — Forecast phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L4-4: Global threat actor tracking — Forecast phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L4-5: Global threat actor tracking — Forecast phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L4-6: Global threat actor tracking — Forecast phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L4-7: Global threat actor tracking — Forecast phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 4 objective satisfied via PREDICT TARGET.'
-    },
-    5: {
-      title: 'Strategic Brief',
-      opening: 'Meridian-7 briefing: Executive threat summary',
-      beat1: 'Operator log L5-1: Global threat actor tracking — Strategic Brief phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L5-2: Global threat actor tracking — Strategic Brief phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L5-3: Global threat actor tracking — Strategic Brief phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L5-4: Global threat actor tracking — Strategic Brief phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L5-5: Global threat actor tracking — Strategic Brief phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L5-6: Global threat actor tracking — Strategic Brief phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L5-7: Global threat actor tracking — Strategic Brief phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 5 objective satisfied via BRIEF.'
-    },
+  var raycaster = new THREE.Raycaster();
+  var pointer = new THREE.Vector2();
+
+  var REGION_POINTS = {
+    north_america: { lat: 41, lon: -98, label: 'North America' },
+    western_europe: { lat: 50, lon: 8, label: 'Western Europe' },
+    eastern_europe: { lat: 49, lon: 30, label: 'Eastern Europe' },
+    russia: { lat: 60, lon: 90, label: 'Russia' },
+    middle_east: { lat: 28, lon: 45, label: 'Middle East' },
+    east_asia: { lat: 35, lon: 116, label: 'East Asia' },
+    southeast_asia: { lat: 12, lon: 106, label: 'Southeast Asia' },
+    south_asia: { lat: 21, lon: 79, label: 'South Asia' },
+    oceania: { lat: -25, lon: 133, label: 'Oceania' },
+    south_america: { lat: -15, lon: -60, label: 'South America' },
+    africa_north: { lat: 28, lon: 16, label: 'North Africa' },
+    africa_subsaharan: { lat: 0, lon: 20, label: 'Sub-Saharan Africa' }
   };
 
-  function narrateLevel(level, shell) {
-    var b = STORY_BEATS[level];
-    if (!b || !shell) return;
-    shell.appendOut('[NARRATIVE] ' + b.opening);
-    shell.appendOut('[NARRATIVE] ' + b.beat1);
-  }
-
-  function buildScene(engine, level, shell) {
-    if (engine.clearPhysics) engine.clearPhysics();
-    meshes = [];
-    engine.addFloor(16, 16, 0x0f172a);
-    var core = engine.addBox(0, 0.5, 0, 1.2, 1.0, 1.2, parseInt('0x020818', 16), 0);
-    core.material.emissive = new THREE.Color(parseInt('0x020818', 16));
-    core.material.emissiveIntensity = 0.25;
-    meshes.push(core);
-    var count = 4 + level;
-    for (var i = 0; i < count; i++) {
-      var m = engine.addBox(
-        (Math.random() - 0.5) * 8,
-        1.2 + Math.random() * 0.5,
-        (Math.random() - 0.5) * 8,
-        0.4, 0.4, 0.4,
-        0x1e293b + (i * 0x050505),
-        0.4 + (i * 0.05)
-      );
-      m.userData.objId = 'obj_' + level + '_' + i;
-      meshes.push(m);
-    }
-    if (level >= 2 && engine.addPhysicsSphere) {
-      for (var s = 0; s < level + 2; s++) {
-        var sp = engine.addPhysicsSphere(
-          (Math.random() - 0.5) * 6,
-          2.5 + Math.random() * 2,
-          (Math.random() - 0.5) * 6,
-          0.12 + Math.random() * 0.08,
-          0x38bdf8,
-          0.5
-        );
-        meshes.push(sp);
+  var CARTOGRAPHY_LEVELS = {
+    1: {
+      levelIndex: 1,
+      name: 'Origin Spotting',
+      hint: 'Select actor origin region based on attribution note.',
+      briefing: 'Threat intel reports a spear-phishing campaign linked to a regional actor cluster.',
+      attribution: {
+        actor: 'Sable Kestrel',
+        campaign: 'Invoice Fog',
+        ttp: 'Initial access via multilingual finance lures',
+        targetSector: 'Manufacturing',
+        expectedRegion: 'eastern_europe'
+      },
+      decoys: ['western_europe', 'russia', 'middle_east'],
+      story: {
+        opening: 'Analysts disagree between neighboring regions with overlapping infrastructure.',
+        beat1: 'Correct origin drives the right intelligence-sharing channel.',
+        closing: 'Origin validated; partner SOC receives targeted warning.'
       }
-    }
-    if (level >= 3) {
-      var alert = engine.addBox(0, 2.0, -2, 2.5, 0.15, 0.1, 0x7f1d1d, 0);
-      alert.material.emissive = new THREE.Color(0xff0000);
-      alert.material.emissiveIntensity = 0.4 + level * 0.05;
-      meshes.push(alert);
-    }
-    narrateLevel(level, shell);
-    bindActionButtons(shell, level);
-  }
-
-  function bindActionButtons(shell, level) {
-    var wrap = document.getElementById('action-btns');
-    wrap.innerHTML = '';
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'act-btn';
-      b.textContent = 'Begin debrief';
-      b.onclick = function () { shell.runEpilogue(); };
-      wrap.appendChild(b);
-      return;
-    }
-    actionDefs.forEach(function (a) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'act-btn';
-      btn.textContent = a.label;
-      btn.onclick = function () { onAction(a.action, shell, level); };
-      wrap.appendChild(btn);
-    });
-  }
-
-  function onAction(action, shell, level) {
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) return;
-    var log = document.getElementById('action-log');
-    log.textContent += '> ' + action + '\n';
-    var seq = def.taskSequence || [{ action: def.action, hint: def.hint }];
-    var idx = shell.levelState.taskIdx || 0;
-    var expected = seq[idx];
-    if (expected && action === expected.action) {
-      score += 80 + level * 20;
-      updateScoreDisplay();
-      shell.appendOut('[SUCCESS] ' + expected.hint);
-      shell.levelState.taskIdx = idx + 1;
-      if (shell.levelState.taskIdx >= seq.length) {
-        shell.onLevelTasksComplete();
-      } else {
-        shell.setTaskText('Step ' + (shell.levelState.taskIdx + 1) + '/' + seq.length + ': ' + seq[shell.levelState.taskIdx].hint);
-      }
-    } else {
-      HabibiProgression.logFailure(GAME_ID, level, 'wrong_action', shell.state);
-      var n = HabibiProgression.getFailureCount(GAME_ID, level, 'wrong_action', shell.state);
-      var fb = HabibiLearning.getFailureFeedback(GAME_ID, level, 'wrong_command', n);
-      var need = expected ? expected.action : def.action;
-      shell.appendOut('[FAIL] Expected: ' + need);
-      if (fb) shell.appendOut('[TUTOR] ' + fb);
-      else shell.appendOut('[TUTOR] Step ' + (idx + 1) + ' requires ' + need + '.');
-    }
-  }
+    },
+    2: {
+      levelIndex: 2,
+      name: 'Pivot Region',
+      hint: 'Identify infrastructure pivot region used for staging.',
+      briefing: 'Botnet staging traffic appears in cloud edge logs with mixed geolocation.',
+      attribution: {
+        actor: 'Copper Atlas',
+        campaign: 'Ghost Relay',
+        ttp: 'Compromised VPS chain with short-lived C2 relay',
+        targetSector: 'Telecom',
+        expectedRegion: 'southeast_asia'
+      },
+      decoys: ['east_asia', 'south_asia', 'oceania'],
+      story: {
+        opening: 'Campaign rotates infrastructure every four hours to evade sinkholing.',
+        beat1: 'Choosing the right pivot region improves blocklist precision.',
+        closing: 'Pivot identified; C2 relay windows collapse after coordinated takedown.'
+      },
+      timeLimit: 220
+    },
+    3: {
+      levelIndex: 3,
+      name: 'Target Expansion',
+      hint: 'Select the next predicted impact region from actor pattern.',
+      briefing: 'Actor shifts from regional attacks to globally staged supply-chain prepositioning.',
+      attribution: {
+        actor: 'Helix Lantern',
+        campaign: 'Silent Registry',
+        ttp: 'Tampered updater packages and signed binary abuse',
+        targetSector: 'Healthcare',
+        expectedRegion: 'north_america'
+      },
+      decoys: ['south_america', 'western_europe', 'africa_north'],
+      story: {
+        opening: 'Historical telemetry shows expansion follows SaaS dependency graph.',
+        beat1: 'Predicting next impact zone supports pre-emptive hardening.',
+        closing: 'Expansion forecast confirmed. Sector SOCs receive early controls checklist.'
+      },
+      timeLimit: 240
+    },
+    4: {
+      levelIndex: 4,
+      name: 'Attribution Confidence',
+      hint: 'Pick region matching full actor-tradecraft confidence model.',
+      briefing: 'Final briefing requires high-confidence regional attribution for executive escalation.',
+      attribution: {
+        actor: 'Night Tracer',
+        campaign: 'Aurora Circuit',
+        ttp: 'Credential replay plus cloud metadata abuse',
+        targetSector: 'Energy',
+        expectedRegion: 'middle_east'
+      },
+      decoys: ['africa_north', 'south_asia', 'eastern_europe'],
+      story: {
+        opening: 'Board-level response depends on whether attack is regional opportunism or strategic pressure.',
+        beat1: 'False region assignment misdirects legal and diplomatic response.',
+        closing: 'Confidence threshold exceeded; leadership approves targeted response posture.'
+      },
+      timeLimit: 260
+    },
+    5: { name: 'Strategic Brief', epilogue: true }
+  };
 
   function updateScoreDisplay() {
     var el = document.getElementById('hud-score');
     if (el) el.textContent = 'SCORE ' + score;
   }
 
-  function startSpeedTrial(shell) {
-    var start = Date.now();
-    var idx = 0;
-    var seq = actionDefs.slice(0, Math.min(5, actionDefs.length));
-    shell.appendOut('[SKILL] Execute: ' + seq.map(function (s) { return s.action; }).join(' → '));
-    function tryAction(action) {
-      if (idx >= seq.length) return;
-      if (action === seq[idx].action) {
-        idx++;
-        if (idx >= seq.length) {
-          var sc = Math.max(0, 900 - Math.floor((Date.now() - start) / 100));
-          shell.submitScore('speedTrial', sc);
-          shell.appendOut('[SKILL] Speed trial score: ' + sc);
-        }
-      }
+  function log(shell, text) {
+    shell.appendOut(text);
+    var panel = document.getElementById('action-log');
+    if (panel) panel.scrollTop = panel.scrollHeight;
+  }
+
+  function clearButtons() {
+    var wrap = document.getElementById('action-btns');
+    if (wrap) wrap.innerHTML = '';
+  }
+
+  function addButton(text, handler) {
+    var wrap = document.getElementById('action-btns');
+    if (!wrap) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'act-btn';
+    btn.textContent = text;
+    btn.onclick = handler;
+    wrap.appendChild(btn);
+  }
+
+  function latLonToVector(lat, lon, radius) {
+    var phi = (90 - lat) * (Math.PI / 180);
+    var theta = (lon + 180) * (Math.PI / 180);
+    return {
+      x: -(radius * Math.sin(phi) * Math.cos(theta)),
+      y: radius * Math.cos(phi),
+      z: radius * Math.sin(phi) * Math.sin(theta)
+    };
+  }
+
+  function regionColor(id, expected) {
+    if (id === expected) return 0x22c55e;
+    return 0x334155;
+  }
+
+  function buildRegionMesh(engine, regionId, expected, radius, idx) {
+    var p = REGION_POINTS[regionId];
+    var pos = latLonToVector(p.lat, p.lon, radius);
+    var mesh = engine.addBox(pos.x, pos.y, pos.z, 0.26, 0.26, 0.26, regionColor(regionId, expected), false);
+    mesh.userData.regionId = regionId;
+    mesh.userData.regionLabel = p.label;
+    mesh.material.emissive = new THREE.Color(regionColor(regionId, expected));
+    mesh.material.emissiveIntensity = 0.25;
+    mesh.material.roughness = 0.35;
+    mesh.material.metalness = 0.65;
+    mesh.lookAt(0, 0, 0);
+
+    var marker = engine.addPhysicsSphere(pos.x * 1.05, pos.y * 1.05, pos.z * 1.05, 0.08, 0x22d3ee, 0.1);
+    marker.userData.particle = true;
+    marker.userData.regionId = regionId;
+    marker.userData.marker = true;
+    marker.userData.phase = idx * 0.8;
+
+    return mesh;
+  }
+
+  function refreshRegionVisuals(levelDef, selectedRegion) {
+    regionMeshes.forEach(function (mesh) {
+      var isSelected = selectedRegion && mesh.userData.regionId === selectedRegion;
+      mesh.material.emissiveIntensity = isSelected ? 0.55 : 0.25;
+      mesh.material.color.setHex(regionColor(mesh.userData.regionId, levelDef.attribution.expectedRegion));
+    });
+  }
+
+  function resetLevelState(shell) {
+    shell.levelState.picked = null;
+    shell.levelState.locked = false;
+    shell.levelState.errors = 0;
+  }
+
+  function buildScene(engine, level, shell) {
+    var def = shell.config.levels[level];
+    engine.clearPhysics();
+    regionMeshes = [];
+    globeShell = null;
+    levelStart = Date.now();
+    engine.addFloor(18, 18, 0x071025);
+
+    if (!def || def.epilogue) {
+      clearButtons();
+      addButton('Begin Debrief', function () { shell.runEpilogue(); });
+      shell.setTaskText('Epilogue unlocked. Debrief to close operation.');
+      return;
     }
-    shell._speedTrialHook = tryAction;
+
+    globeShell = engine.addPhysicsSphere(0, 2.2, 0, 2.2, 0x0f172a, 0);
+    globeShell.material.transparent = true;
+    globeShell.material.opacity = 0.86;
+    globeShell.material.emissive = new THREE.Color(0x1d4ed8);
+    globeShell.material.emissiveIntensity = 0.2;
+
+    var focusRegions = [def.attribution.expectedRegion].concat(def.decoys);
+    focusRegions.forEach(function (regionId, idx) {
+      regionMeshes.push(buildRegionMesh(engine, regionId, def.attribution.expectedRegion, 2.35, idx));
+    });
+
+    resetLevelState(shell);
+    refreshRegionVisuals(def, null);
+    bindButtons(shell, level);
+
+    log(shell, '[NARRATIVE] ' + def.briefing);
+    log(shell, '[NARRATIVE] ' + def.story.opening);
+    log(shell, '[NARRATIVE] ' + def.story.beat1);
+    log(shell, '[ATTRIB] Actor=' + def.attribution.actor + ', Campaign=' + def.attribution.campaign);
+    log(shell, '[ATTRIB] TTP=' + def.attribution.ttp + ', Sector=' + def.attribution.targetSector);
+    shell.setTaskText(def.hint);
+  }
+
+  function submitSelection(shell, def) {
+    if (!shell.levelState.picked) {
+      log(shell, '[FAIL] Select a region node before submitting.');
+      return;
+    }
+    if (shell.levelState.locked) return;
+
+    var chosen = shell.levelState.picked;
+    var expected = def.attribution.expectedRegion;
+    var elapsed = Math.floor((Date.now() - levelStart) / 1000);
+    var timeBonus = Math.max(0, 120 - elapsed);
+
+    if (chosen === expected) {
+      var gained = 260 + def.levelIndex * 40 + timeBonus;
+      score += gained;
+      updateScoreDisplay();
+      shell.levelState.locked = true;
+      log(shell, '[SUCCESS] Correct region: ' + REGION_POINTS[expected].label + '. +' + gained);
+      log(shell, '[STORY] ' + def.story.closing);
+      shell.onLevelTasksComplete();
+      return;
+    }
+
+    shell.levelState.errors += 1;
+    HabibiProgression.logFailure(GAME_ID, def.levelIndex, 'wrong_region', shell.state);
+    var n = HabibiProgression.getFailureCount(GAME_ID, def.levelIndex, 'wrong_region', shell.state);
+    var tutor = HabibiLearning.getFailureFeedback(GAME_ID, def.levelIndex, 'wrong_command', n);
+    log(shell, '[FAIL] Selected ' + REGION_POINTS[chosen].label + ', attribution indicates another region.');
+    if (tutor) log(shell, '[TUTOR] ' + tutor);
+    else log(shell, '[TUTOR] Re-check campaign logistics, language lures, and infrastructure overlap.');
+  }
+
+  function revealAttribution(def, shell) {
+    log(shell, '[DATA] Actor=' + def.attribution.actor);
+    log(shell, '[DATA] Campaign=' + def.attribution.campaign);
+    log(shell, '[DATA] Tradecraft=' + def.attribution.ttp);
+    log(shell, '[DATA] Target sector=' + def.attribution.targetSector);
+  }
+
+  function clearSelection(shell, def) {
+    shell.levelState.picked = null;
+    refreshRegionVisuals(def, null);
+    shell.setTaskText(def.hint);
+    log(shell, '[INFO] Region selection cleared.');
+  }
+
+  function bindButtons(shell, level) {
+    clearButtons();
+    var def = shell.config.levels[level];
+    if (!def || def.epilogue) {
+      addButton('Begin Debrief', function () { shell.runEpilogue(); });
+      return;
+    }
+
+    addButton('Submit Region', function () { submitSelection(shell, def); });
+    addButton('Clear Selection', function () { clearSelection(shell, def); });
+    addButton('Review Attribution', function () { revealAttribution(def, shell); });
+  }
+
+  function pickRegion(shell, event) {
+    var level = shell.state.currentLevel;
+    var def = shell.config.levels[level];
+    if (!def || def.epilogue || !shell.engine || !shell.levelState || shell.levelState.locked) return;
+
+    var rect = shell.engine.renderer.domElement.getBoundingClientRect();
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, shell.engine.camera);
+
+    var hits = raycaster.intersectObjects(regionMeshes, false);
+    if (!hits.length) return;
+
+    var regionId = hits[0].object.userData.regionId;
+    shell.levelState.picked = regionId;
+    refreshRegionVisuals(def, regionId);
+    shell.setTaskText(
+      'Selected ' + REGION_POINTS[regionId].label + '. Submit when ready.'
+    );
+    log(shell, '[PICK] ' + REGION_POINTS[regionId].label + ' selected.');
+  }
+
+  function startSpeedTrial(shell) {
+    var errors = shell.levelState && shell.levelState.errors ? shell.levelState.errors : 0;
+    var val = Math.max(140, 1000 - errors * 140);
+    shell.submitScore('speedTrial', val);
+    log(shell, '[SKILL] Speed trial score: ' + val);
   }
 
   function startAccuracyGauntlet(shell) {
-    var sc = 850;
-    shell.submitScore('accuracyGauntlet', sc);
-    shell.appendOut('[SKILL] Accuracy gauntlet score: ' + sc);
+    var errors = shell.levelState && shell.levelState.errors ? shell.levelState.errors : 0;
+    var val = Math.max(100, 900 - errors * 180);
+    shell.submitScore('accuracyGauntlet', val);
+    log(shell, '[SKILL] Accuracy gauntlet score: ' + val);
   }
 
   function startDecisionTree(shell) {
-    var gained = 600;
-    shell.appendOut('[TREE] Decision tree complete — optimal playbook path recorded.');
-    shell.submitScore('decisionTree', gained);
+    log(shell, '[TREE] Regional attribution model weights: language lure, hosting locality, victim vertical.');
+    shell.submitScore('decisionTree', 650);
   }
 
   var config = {
@@ -225,142 +333,42 @@
     title: 'CARTOGRAPHY',
     achievementId: 'cartography_master',
     leaderboardChallenge: 'speedTrial',
-    engine: { bg: 0x020818, physics: true },
-    moveSpeed: 2.4,
+    engine: { bg: 0x071025, physics: true },
+    moveSpeed: 2.3,
     buildScene: buildScene,
     levels: {
-    1: {
-      name: 'Globe Orientation',
-      hint: 'Identify actor origin regions',
-      action: 'FILTER LAYER',
-      taskSequence: [
-        { action: 'FILTER LAYER', hint: 'Context pass — run FILTER LAYER on incoming telemetry' },
-        { action: 'FILTER LAYER', hint: 'Identify actor origin regions' }
-      ],
-      tasks: [{
-        id: 'L1_main',
-        hint: 'Identify actor origin regions',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] FILTER LAYER — Identify actor origin regions',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 1 (5 paths)',
-        desc: 'Your Global threat actor tracking choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_1', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_1', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_1', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_1', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_1', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    2: {
-      name: 'Arc Analysis',
-      hint: 'Inspect attack arc metadata',
-      action: 'SELECT ARC', timeLimit: 300,
-      taskSequence: [
-        { action: 'SELECT ARC', hint: 'Context pass — run SELECT ARC on incoming telemetry' },
-        { action: 'SELECT ARC', hint: 'Inspect attack arc metadata' }
-      ],
-      tasks: [{
-        id: 'L2_main',
-        hint: 'Inspect attack arc metadata',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] SELECT ARC — Inspect attack arc metadata',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 2 (5 paths)',
-        desc: 'Your Global threat actor tracking choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_2', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_2', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_2', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_2', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_2', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    3: {
-      name: 'TTP Match',
-      hint: 'Match indicators to actor profile',
-      action: 'ATTRIBUTE', timeLimit: 360,
-      taskSequence: [
-        { action: 'BRIEF', hint: 'Pre-check — validate environment baseline' },
-        { action: 'ATTRIBUTE', hint: 'Context pass — run ATTRIBUTE on incoming telemetry' },
-        { action: 'ATTRIBUTE', hint: 'Match indicators to actor profile' }
-      ],
-      tasks: [{
-        id: 'L3_main',
-        hint: 'Match indicators to actor profile',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] ATTRIBUTE — Match indicators to actor profile',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 3 (5 paths)',
-        desc: 'Your Global threat actor tracking choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_3', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_3', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_3', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_3', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_3', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    4: {
-      name: 'Forecast',
-      hint: 'Predict next likely target region',
-      action: 'PREDICT TARGET', timeLimit: 420,
-      taskSequence: [
-        { action: 'FILTER LAYER', hint: 'Pre-check — validate environment baseline' },
-        { action: 'PREDICT TARGET', hint: 'Context pass — run PREDICT TARGET on incoming telemetry' },
-        { action: 'PREDICT TARGET', hint: 'Predict next likely target region' }
-      ],
-      tasks: [{
-        id: 'L4_main',
-        hint: 'Predict next likely target region',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] PREDICT TARGET — Predict next likely target region',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }]
-    }
-    5: { name: 'Strategic Brief', epilogue: true }
+      1: CARTOGRAPHY_LEVELS[1],
+      2: CARTOGRAPHY_LEVELS[2],
+      3: CARTOGRAPHY_LEVELS[3],
+      4: CARTOGRAPHY_LEVELS[4],
+      5: CARTOGRAPHY_LEVELS[5]
     },
     skills: [
-      { id: 'speedTrial', name: 'Speed Trial', unlockAfter: 1, desc: 'Chain operator actions quickly', start: startSpeedTrial },
-      { id: 'accuracyGauntlet', name: 'Accuracy Gauntlet', unlockAfter: 2, desc: 'Zero-error action sequence', start: startAccuracyGauntlet },
-      { id: 'decisionTree', name: 'Decision Tree', unlockAfter: 3, desc: 'Pick optimal playbook steps', start: startDecisionTree }
+      { id: 'speedTrial', name: 'Speed Trial', unlockAfter: 1, desc: 'Identify region quickly', start: startSpeedTrial },
+      { id: 'accuracyGauntlet', name: 'Accuracy Gauntlet', unlockAfter: 2, desc: 'No incorrect region picks', start: startAccuracyGauntlet },
+      { id: 'decisionTree', name: 'Decision Tree', unlockAfter: 3, desc: 'Review attribution model', start: startDecisionTree }
     ],
-    onLevelStart: function (n, shell) {
-      shell.levelState.taskIdx = 0;
-      var def = shell.config.levels[n];
-      var seq = def.taskSequence || [{ hint: def.hint }];
-      shell.setTaskText('Step 1/' + seq.length + ': ' + (seq[0].hint || def.hint));
-      score += n * 10;
-      updateScoreDisplay();
-      narrateLevel(n, shell);
-    },
-    onLevelComplete: function (lv, shell) {
-      var b = STORY_BEATS[lv];
-      if (b) shell.appendOut('[NARRATIVE] ' + b.closing);
-    }
-  };
-
-  config.onTick = function (dt, shell) {
-    meshes.forEach(function (m) {
-      if (m.userData && m.userData.physicsBody && m.userData.physicsBody.mass > 0) return;
-      if (m.userData && m.userData.particle) {
-        m.position.y += Math.sin(Date.now() * 0.002 + m.position.x) * dt * 0.3;
+    onLevelStart: function (level, shell) {
+      var def = shell.config.levels[level];
+      if (!def || def.epilogue) {
+        shell.setTaskText('Epilogue unlocked. Begin debrief.');
+        return;
       }
-    });
+      resetLevelState(shell);
+      levelStart = Date.now();
+      bindButtons(shell, level);
+      shell.setTaskText(def.hint);
+    },
+    onLevelComplete: function (level, shell) {
+      var def = shell.config.levels[level];
+      if (def && def.story) log(shell, '[NARRATIVE] ' + def.story.closing);
+    },
+    onTick: function (dt) {
+      if (globeShell) globeShell.rotation.y += dt * 0.18;
+      regionMeshes.forEach(function (mesh, idx) {
+        mesh.rotation.y += dt * (0.3 + idx * 0.03);
+      });
+    }
   };
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -371,31 +379,28 @@
         return;
       }
     }
+
     var shell = new HabibiGameShell(config);
     shell.score = 0;
     shell.updateScore = updateScoreDisplay;
-    shell.appendOut = function (t) {
+    shell.appendOut = function (text) {
       var el = document.getElementById('action-log');
-      el.textContent += t + '\n';
+      if (!el) return;
+      el.textContent += text + '\n';
       el.scrollTop = el.scrollHeight;
     };
-    shell.setTaskText = function (t) { document.getElementById('task-text').textContent = t; };
+    shell.setTaskText = function (text) {
+      var taskEl = document.getElementById('task-text');
+      if (taskEl) taskEl.textContent = text;
+    };
     shell.init();
+
+    var canvas = document.getElementById('canvas-host');
+    if (canvas) {
+      canvas.addEventListener('click', function (event) {
+        pickRegion(shell, event);
+      });
+    }
+    updateScoreDisplay();
   });
 })();
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */

@@ -1,8 +1,6 @@
 /**
- * INTERROGATION ROOM — 3D Experience Module (enhanced)
- * Core concept: Command and Control communication patterns
- * Decrypt C2 sessions and extract IOCs
- * Physics: Cannon-es via HabibiPhysics | Branches: 15 (5×L1–3) | Tasks: multi-step per level
+ * INTERROGATION ROOM — full gameplay module
+ * Decode C2 command traffic and classify protocol patterns.
  */
 (function () {
   'use strict';
@@ -10,178 +8,128 @@
   var GAME_ID = 'the_interrogation_room';
   var score = 0;
   var meshes = [];
-  var actionDefs = [
-    { id: 'decode_b64', label: 'DECODE B64', action: 'DECODE B64' },
-    { id: 'extract_ip', label: 'EXTRACT IP', action: 'EXTRACT IP' },
-    { id: 'tag_hash', label: 'TAG HASH', action: 'TAG HASH' },
-    { id: 'unlock_omega', label: 'UNLOCK OMEGA', action: 'UNLOCK OMEGA' },
-    { id: 'submit_ioc', label: 'SUBMIT IOC', action: 'SUBMIT IOC' },
-  ];
-
-  var STORY_BEATS = {
-    1: {
-      title: 'C2 vs HTTPS',
-      opening: 'Meridian-7 briefing: Separate beacon traffic from web noise',
-      beat1: 'Operator log L1-1: Command and Control communication patterns — C2 vs HTTPS phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L1-2: Command and Control communication patterns — C2 vs HTTPS phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L1-3: Command and Control communication patterns — C2 vs HTTPS phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L1-4: Command and Control communication patterns — C2 vs HTTPS phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L1-5: Command and Control communication patterns — C2 vs HTTPS phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L1-6: Command and Control communication patterns — C2 vs HTTPS phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L1-7: Command and Control communication patterns — C2 vs HTTPS phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 1 objective satisfied via DECODE B64.'
-    },
-    2: {
-      title: 'Protocol Decode',
-      opening: 'Meridian-7 briefing: Decode base64 command batch',
-      beat1: 'Operator log L2-1: Command and Control communication patterns — Protocol Decode phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L2-2: Command and Control communication patterns — Protocol Decode phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L2-3: Command and Control communication patterns — Protocol Decode phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L2-4: Command and Control communication patterns — Protocol Decode phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L2-5: Command and Control communication patterns — Protocol Decode phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L2-6: Command and Control communication patterns — Protocol Decode phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L2-7: Command and Control communication patterns — Protocol Decode phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 2 objective satisfied via EXTRACT IP.'
-    },
-    3: {
-      title: 'IOC Extraction',
-      opening: 'Meridian-7 briefing: Pull domains and hashes from transcript',
-      beat1: 'Operator log L3-1: Command and Control communication patterns — IOC Extraction phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L3-2: Command and Control communication patterns — IOC Extraction phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L3-3: Command and Control communication patterns — IOC Extraction phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L3-4: Command and Control communication patterns — IOC Extraction phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L3-5: Command and Control communication patterns — IOC Extraction phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L3-6: Command and Control communication patterns — IOC Extraction phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L3-7: Command and Control communication patterns — IOC Extraction phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 3 objective satisfied via TAG HASH.'
-    },
-    4: {
-      title: 'Framework ID',
-      opening: 'Meridian-7 briefing: Attribute malware family by behavior',
-      beat1: 'Operator log L4-1: Command and Control communication patterns — Framework ID phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L4-2: Command and Control communication patterns — Framework ID phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L4-3: Command and Control communication patterns — Framework ID phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L4-4: Command and Control communication patterns — Framework ID phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L4-5: Command and Control communication patterns — Framework ID phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L4-6: Command and Control communication patterns — Framework ID phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L4-7: Command and Control communication patterns — Framework ID phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 4 objective satisfied via UNLOCK OMEGA.'
-    },
-    5: {
-      title: 'Threat Intel Brief',
-      opening: 'Meridian-7 briefing: Package IOCs for sharing',
-      beat1: 'Operator log L5-1: Command and Control communication patterns — Threat Intel Brief phase 1 aligns with live SOC runbooks.',
-      beat2: 'Operator log L5-2: Command and Control communication patterns — Threat Intel Brief phase 2 aligns with live SOC runbooks.',
-      beat3: 'Operator log L5-3: Command and Control communication patterns — Threat Intel Brief phase 3 aligns with live SOC runbooks.',
-      beat4: 'Operator log L5-4: Command and Control communication patterns — Threat Intel Brief phase 4 aligns with live SOC runbooks.',
-      beat5: 'Operator log L5-5: Command and Control communication patterns — Threat Intel Brief phase 5 aligns with live SOC runbooks.',
-      beat6: 'Operator log L5-6: Command and Control communication patterns — Threat Intel Brief phase 6 aligns with live SOC runbooks.',
-      beat7: 'Operator log L5-7: Command and Control communication patterns — Threat Intel Brief phase 7 aligns with live SOC runbooks.',
-      closing: 'Level 5 objective satisfied via SUBMIT IOC.'
-    },
+  var pulse = 0;
+  var runtime = {
+    skill: null,
+    buttonMap: {},
+    levelStartMs: 0
   };
 
-  function narrateLevel(level, shell) {
-    var b = STORY_BEATS[level];
-    if (!b || !shell) return;
-    shell.appendOut('[NARRATIVE] ' + b.opening);
-    shell.appendOut('[NARRATIVE] ' + b.beat1);
-  }
-
-  function buildScene(engine, level, shell) {
-    if (engine.clearPhysics) engine.clearPhysics();
-    meshes = [];
-    engine.addFloor(16, 16, 0x0f172a);
-    var core = engine.addBox(0, 0.5, 0, 1.2, 1.0, 1.2, parseInt('0x0a0804', 16), 0);
-    core.material.emissive = new THREE.Color(parseInt('0x0a0804', 16));
-    core.material.emissiveIntensity = 0.25;
-    meshes.push(core);
-    var count = 4 + level;
-    for (var i = 0; i < count; i++) {
-      var m = engine.addBox(
-        (Math.random() - 0.5) * 8,
-        1.2 + Math.random() * 0.5,
-        (Math.random() - 0.5) * 8,
-        0.4, 0.4, 0.4,
-        0x1e293b + (i * 0x050505),
-        0.4 + (i * 0.05)
-      );
-      m.userData.objId = 'obj_' + level + '_' + i;
-      meshes.push(m);
-    }
-    if (level >= 2 && engine.addPhysicsSphere) {
-      for (var s = 0; s < level + 2; s++) {
-        var sp = engine.addPhysicsSphere(
-          (Math.random() - 0.5) * 6,
-          2.5 + Math.random() * 2,
-          (Math.random() - 0.5) * 6,
-          0.12 + Math.random() * 0.08,
-          0x38bdf8,
-          0.5
-        );
-        meshes.push(sp);
+  var C2_LEVELS = {
+    1: {
+      name: 'Beacon Bootstrap',
+      intel: {
+        ip: '185.141.26.43',
+        cve: 'CVE-2023-34362',
+        mitre: 'T1071.001',
+        tool: 'Cobalt Strike',
+        ts: '2026-05-24T19:11:22Z',
+        protocol: 'HTTPS',
+        encoded: 'd2hvYW1pICYgaXBjb25maWcgL2FsbA==',
+        decoded: 'whoami && ipconfig /all'
+      }
+    },
+    2: {
+      name: 'DNS Tunneling Pivot',
+      intel: {
+        ip: '103.77.192.88',
+        cve: 'CVE-2024-1709',
+        mitre: 'T1071.004',
+        tool: 'dnscat2',
+        ts: '2026-05-24T19:23:48Z',
+        protocol: 'DNS',
+        encoded: 'bmV0IHVzZXIgL2RvbWFpbg==',
+        decoded: 'net user /domain'
+      }
+    },
+    3: {
+      name: 'SMB Lateral Relay',
+      intel: {
+        ip: '172.20.44.91',
+        cve: 'CVE-2020-1472',
+        mitre: 'T1021.002',
+        tool: 'Impacket',
+        ts: '2026-05-24T19:41:05Z',
+        protocol: 'SMB',
+        encoded: 'bmV0IHVzZSBcXFwxMC4xMC4xLjIwXGMk',
+        decoded: 'net use \\\\10.10.1.20\\c$'
+      }
+    },
+    4: {
+      name: 'WebSocket Fallback',
+      intel: {
+        ip: '45.155.205.17',
+        cve: 'CVE-2021-44228',
+        mitre: 'T1105',
+        tool: 'Sliver',
+        ts: '2026-05-24T20:02:16Z',
+        protocol: 'WEBSOCKET',
+        encoded: 'Y21kIC9jIHBvd2Vyc2hlbGwgLWVuYw==',
+        decoded: 'cmd /c powershell -enc'
       }
     }
-    if (level >= 3) {
-      var alert = engine.addBox(0, 2.0, -2, 2.5, 0.15, 0.1, 0x7f1d1d, 0);
-      alert.material.emissive = new THREE.Color(0xff0000);
-      alert.material.emissiveIntensity = 0.4 + level * 0.05;
-      meshes.push(alert);
-    }
-    narrateLevel(level, shell);
-    bindActionButtons(shell, level);
-  }
+  };
 
-  function bindActionButtons(shell, level) {
-    var wrap = document.getElementById('action-btns');
-    wrap.innerHTML = '';
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'act-btn';
-      b.textContent = 'Begin debrief';
-      b.onclick = function () { shell.runEpilogue(); };
-      wrap.appendChild(b);
-      return;
-    }
-    actionDefs.forEach(function (a) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'act-btn';
-      btn.textContent = a.label;
-      btn.onclick = function () { onAction(a.action, shell, level); };
-      wrap.appendChild(btn);
-    });
-  }
+  var PROTOCOL_CHOICES = ['HTTPS', 'DNS', 'SMB', 'WEBSOCKET', 'IRC', 'FTP'];
 
-  function onAction(action, shell, level) {
-    var def = shell.config.levels[level];
-    if (!def || def.epilogue) return;
-    var log = document.getElementById('action-log');
-    log.textContent += '> ' + action + '\n';
-    var seq = def.taskSequence || [{ action: def.action, hint: def.hint }];
-    var idx = shell.levelState.taskIdx || 0;
-    var expected = seq[idx];
-    if (expected && action === expected.action) {
-      score += 80 + level * 20;
-      updateScoreDisplay();
-      shell.appendOut('[SUCCESS] ' + expected.hint);
-      shell.levelState.taskIdx = idx + 1;
-      if (shell.levelState.taskIdx >= seq.length) {
-        shell.onLevelTasksComplete();
-      } else {
-        shell.setTaskText('Step ' + (shell.levelState.taskIdx + 1) + '/' + seq.length + ': ' + seq[shell.levelState.taskIdx].hint);
-      }
-    } else {
-      HabibiProgression.logFailure(GAME_ID, level, 'wrong_action', shell.state);
-      var n = HabibiProgression.getFailureCount(GAME_ID, level, 'wrong_action', shell.state);
-      var fb = HabibiLearning.getFailureFeedback(GAME_ID, level, 'wrong_command', n);
-      var need = expected ? expected.action : def.action;
-      shell.appendOut('[FAIL] Expected: ' + need);
-      if (fb) shell.appendOut('[TUTOR] ' + fb);
-      else shell.appendOut('[TUTOR] Step ' + (idx + 1) + ' requires ' + need + '.');
-    }
+  var STORY_BEATS = {
+    1: [
+      '2026-05-24T19:11:22Z | SRC 185.141.26.43 | CVE-2023-34362 exploitation chain opens shell transport.',
+      '2026-05-24T19:11:41Z | MITRE T1071.001 observed over JA3-tuned TLS beaconing.',
+      '2026-05-24T19:12:03Z | Tool fingerprint: Cobalt Strike profile with 60s jitter.',
+      '2026-05-24T19:12:25Z | Packet body contains base64 task block d2hvYW1pICYgaXBjb25maWcgL2FsbA==.',
+      '2026-05-24T19:12:44Z | EDR notes child process cmd.exe spawning discovery commands.',
+      '2026-05-24T19:13:01Z | MITRE T1082 system discovery confirms host inventory pull.',
+      '2026-05-24T19:13:21Z | Analyst action required: classify protocol and decode initial command.'
+    ],
+    2: [
+      '2026-05-24T19:23:48Z | SRC 103.77.192.88 | CVE-2024-1709 exploitation follows edge VPN auth bypass.',
+      '2026-05-24T19:24:10Z | MITRE T1071.004 beacon channel shifts into TXT subdomain bursts.',
+      '2026-05-24T19:24:29Z | Tool fingerprint: dnscat2 framing with base32 headers.',
+      '2026-05-24T19:24:57Z | Encoded command bmV0IHVzZXIgL2RvbWFpbg== appears in response payload.',
+      '2026-05-24T19:25:15Z | Resolver telemetry shows 14.2 qps to random-labeled domains.',
+      '2026-05-24T19:25:42Z | MITRE T1087.002 indicates domain account enumeration.',
+      '2026-05-24T19:26:04Z | Analyst action required: lock protocol class and decode operator intent.'
+    ],
+    3: [
+      '2026-05-24T19:41:05Z | SRC 172.20.44.91 | CVE-2020-1472 path follows privilege reset.',
+      '2026-05-24T19:41:21Z | MITRE T1021.002 remote service activity spikes across admin shares.',
+      '2026-05-24T19:41:52Z | Tool fingerprint: Impacket smbexec chain with host fan-out.',
+      '2026-05-24T19:42:13Z | Encoded command bmV0IHVzZSBcXFwxMC4xMC4xLjIwXGMk captured in job queue.',
+      '2026-05-24T19:42:43Z | Defender alert: anomalous service creation via IPC$ session.',
+      '2026-05-24T19:43:09Z | MITRE T1570 lateral transfer indicators reach threshold.',
+      '2026-05-24T19:43:31Z | Analyst action required: identify protocol and decode staging command.'
+    ],
+    4: [
+      '2026-05-24T20:02:16Z | SRC 45.155.205.17 | CVE-2021-44228 pre-auth payload observed.',
+      '2026-05-24T20:02:37Z | MITRE T1105 ingress transfer switches from HTTPS to websocket fallback.',
+      '2026-05-24T20:03:05Z | Tool fingerprint: Sliver transport upgrade with per-message AES framing.',
+      '2026-05-24T20:03:32Z | Encoded command Y21kIC9jIHBvd2Vyc2hlbGwgLWVuYw== inserted into callback.',
+      '2026-05-24T20:03:57Z | Proxy logs show websocket endpoint /live/feed pinned for 12 minutes.',
+      '2026-05-24T20:04:17Z | MITRE T1059.001 indicates encoded powershell execution handoff.',
+      '2026-05-24T20:04:36Z | Analyst action required: finalize protocol class and command decoding.'
+    ],
+    5: [
+      '2026-05-24T20:17:06Z | Intel merge begins for all four intercepted channels.',
+      '2026-05-24T20:17:25Z | MITRE mappings consolidated: T1071.001, T1071.004, T1021.002, T1105.',
+      '2026-05-24T20:17:50Z | CVE chain includes CVE-2023-34362, CVE-2024-1709, CVE-2020-1472, CVE-2021-44228.',
+      '2026-05-24T20:18:09Z | Tool tags exported: Cobalt Strike, dnscat2, Impacket, Sliver.',
+      '2026-05-24T20:18:31Z | IOC package includes source IP set and decoded command set.',
+      '2026-05-24T20:18:56Z | Response team requests debrief acknowledgment.',
+      '2026-05-24T20:19:18Z | Operator action required: run module debrief.'
+    ]
+  };
+
+  function ensureExtras(shell) {
+    var extras = shell.levelState.extras || {};
+    if (!extras.selectedProtocol) extras.selectedProtocol = '';
+    if (!extras.decodedCommand) extras.decodedCommand = '';
+    if (!extras.protocolVerified) extras.protocolVerified = false;
+    if (!extras.commandVerified) extras.commandVerified = false;
+    if (!extras.failures) extras.failures = 0;
+    if (!extras.actions) extras.actions = [];
+    shell.levelState.extras = extras;
+    return extras;
   }
 
   function updateScoreDisplay() {
@@ -189,213 +137,584 @@
     if (el) el.textContent = 'SCORE ' + score;
   }
 
-  function startSpeedTrial(shell) {
-    var start = Date.now();
-    var idx = 0;
-    var seq = actionDefs.slice(0, Math.min(5, actionDefs.length));
-    shell.appendOut('[SKILL] Execute: ' + seq.map(function (s) { return s.action; }).join(' → '));
-    function tryAction(action) {
-      if (idx >= seq.length) return;
-      if (action === seq[idx].action) {
-        idx++;
-        if (idx >= seq.length) {
-          var sc = Math.max(0, 900 - Math.floor((Date.now() - start) / 100));
-          shell.submitScore('speedTrial', sc);
-          shell.appendOut('[SKILL] Speed trial score: ' + sc);
-        }
+  function addPoints(shell, amount, why) {
+    score += amount;
+    shell.score += amount;
+    updateScoreDisplay();
+    shell.appendOut('[POINTS] +' + amount + ' ' + why + ' | total ' + score);
+  }
+
+  function revealInputAndButtons() {
+    var form = document.getElementById('term-form');
+    var buttons = document.getElementById('action-btns');
+    if (form) form.classList.remove('hidden');
+    if (buttons) buttons.classList.remove('hidden');
+  }
+
+  function normalizeCmd(value) {
+    return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  function isExpectedCommand(level, candidate) {
+    var intel = C2_LEVELS[level] && C2_LEVELS[level].intel;
+    if (!intel) return false;
+    return normalizeCmd(candidate) === normalizeCmd(intel.decoded);
+  }
+
+  function isExpectedProtocol(level, candidate) {
+    var intel = C2_LEVELS[level] && C2_LEVELS[level].intel;
+    if (!intel) return false;
+    return String(candidate || '').toUpperCase() === intel.protocol;
+  }
+
+  function logStory(shell, level) {
+    var beats = STORY_BEATS[level] || [];
+    var i;
+    for (i = 0; i < beats.length; i++) {
+      shell.appendOut('[INTEL] ' + beats[i]);
+    }
+  }
+
+  function levelSummary(shell, level) {
+    var intel = C2_LEVELS[level] && C2_LEVELS[level].intel;
+    if (!intel) return;
+    shell.appendOut(
+      '[CASE] SRC ' + intel.ip + ' | ' + intel.cve + ' | ' + intel.mitre + ' | ' + intel.tool + ' | ' + intel.ts
+    );
+    shell.appendOut('[CASE] Encoded command: ' + intel.encoded);
+    shell.appendOut('[CASE] Select protocol, then type decoded command in terminal input.');
+  }
+
+  function renderProtocolButtons(shell, level) {
+    var wrap = document.getElementById('action-btns');
+    var i;
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    runtime.buttonMap = {};
+    for (i = 0; i < PROTOCOL_CHOICES.length; i++) {
+      appendProtocolButton(wrap, PROTOCOL_CHOICES[i], shell, level);
+    }
+    if (level === 5) {
+      var debrief = document.createElement('button');
+      debrief.type = 'button';
+      debrief.className = 'act-btn';
+      debrief.textContent = 'RUN DEBRIEF';
+      debrief.onclick = function () { shell.runEpilogue(); };
+      wrap.appendChild(debrief);
+    }
+  }
+
+  function appendProtocolButton(wrap, protocol, shell, level) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'act-btn';
+    button.textContent = protocol;
+    button.onclick = function () {
+      chooseProtocol(shell, level, protocol);
+    };
+    wrap.appendChild(button);
+    runtime.buttonMap[protocol] = button;
+  }
+
+  function chooseProtocol(shell, level, protocol) {
+    var extras = ensureExtras(shell);
+    extras.selectedProtocol = protocol;
+    extras.actions.push({ t: Date.now(), type: 'protocol', value: protocol });
+    extras.protocolVerified = isExpectedProtocol(level, protocol);
+    shell.appendOut('[ACTION] Protocol selected: ' + protocol);
+    if (extras.protocolVerified) {
+      addPoints(shell, 45, 'correct protocol');
+      shell.appendOut('[SUCCESS] Protocol matches captured C2 transport.');
+    } else {
+      extras.failures += 1;
+      HabibiProgression.logFailure(GAME_ID, level, 'wrong_protocol', shell.state);
+      shell.appendOut('[FAIL] Protocol mismatch for this level intelligence.');
+    }
+    shell.processCommand('check');
+  }
+
+  function handleTypedCommand(shell, raw) {
+    var level = shell.state.currentLevel;
+    var extras = ensureExtras(shell);
+    extras.decodedCommand = raw;
+    extras.actions.push({ t: Date.now(), type: 'command', value: raw });
+    extras.commandVerified = isExpectedCommand(level, raw);
+    if (extras.commandVerified) {
+      addPoints(shell, 80, 'decoded C2 command');
+      shell.appendOut('[SUCCESS] Command decode validated against known C2 tasking.');
+    } else {
+      extras.failures += 1;
+      HabibiProgression.logFailure(GAME_ID, level, 'wrong_command', shell.state);
+      shell.appendOut('[FAIL] Command decode is incorrect for this payload.');
+      shell.appendOut('[HINT] Base64 payload decodes into a Windows operator command.');
+    }
+    shell.processCommand('check');
+  }
+
+  function setupForm(shell) {
+    var form = document.getElementById('term-form');
+    var input = document.getElementById('term-in');
+    if (!form || !input) return;
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      var cmd = input.value.trim();
+      if (!cmd) return;
+      input.value = '';
+      shell.appendOut('> ' + cmd);
+      if (runtime.skill) {
+        handleSkillInput(shell, cmd);
+        return;
+      }
+      if (shell.state.currentLevel === 5 && normalizeCmd(cmd) === 'run debrief') {
+        shell.runEpilogue();
+        return;
+      }
+      handleTypedCommand(shell, cmd);
+    }, true);
+  }
+
+  function validateProtocolTask(level, shell) {
+    var extras = ensureExtras(shell);
+    return extras.protocolVerified && isExpectedProtocol(level, extras.selectedProtocol);
+  }
+
+  function validateCommandTask(level, shell) {
+    var extras = ensureExtras(shell);
+    return extras.commandVerified && isExpectedCommand(level, extras.decodedCommand);
+  }
+
+  function buildScene(engine, level, shell) {
+    var i;
+    if (engine.clearPhysics) engine.clearPhysics();
+    meshes = [];
+    pulse = 0;
+
+    engine.addFloor(18, 18, 0x0b1220);
+    var core = engine.addBox(0, 0.6, 0, 1.8, 1.1, 1.8, 0x111827, 0);
+    core.material.emissive = new THREE.Color(0x1d4ed8);
+    core.material.emissiveIntensity = 0.25;
+    core.userData.kind = 'core';
+    meshes.push(core);
+
+    for (i = 0; i < 6 + level * 2; i++) {
+      var node = engine.addBox(
+        (Math.random() - 0.5) * 10,
+        0.8 + Math.random() * 1.8,
+        (Math.random() - 0.5) * 10,
+        0.36,
+        0.36,
+        0.36,
+        0x0ea5e9 + i * 600,
+        0.2 + level * 0.03
+      );
+      node.userData.kind = 'node';
+      meshes.push(node);
+    }
+
+    for (i = 0; i < level + 3; i++) {
+      var ring = engine.addBox(
+        (Math.random() - 0.5) * 8,
+        2.1 + Math.random() * 1.1,
+        (Math.random() - 0.5) * 8,
+        1.0,
+        0.05,
+        1.0,
+        0x22d3ee,
+        0
+      );
+      ring.material.emissive = new THREE.Color(0x06b6d4);
+      ring.material.emissiveIntensity = 0.22;
+      ring.userData.kind = 'ring';
+      meshes.push(ring);
+    }
+
+    if (engine.addPhysicsSphere) {
+      for (i = 0; i < level + 4; i++) {
+        var spark = engine.addPhysicsSphere(
+          (Math.random() - 0.5) * 9,
+          2 + Math.random() * 2.2,
+          (Math.random() - 0.5) * 9,
+          0.1 + Math.random() * 0.08,
+          0x60a5fa,
+          0.3
+        );
+        spark.userData.kind = 'spark';
+        meshes.push(spark);
       }
     }
-    shell._speedTrialHook = tryAction;
+
+    revealInputAndButtons();
+    renderProtocolButtons(shell, level);
+    logStory(shell, level);
+    levelSummary(shell, level);
   }
 
-  function startAccuracyGauntlet(shell) {
-    var sc = 850;
-    shell.submitScore('accuracyGauntlet', sc);
-    shell.appendOut('[SKILL] Accuracy gauntlet score: ' + sc);
+  function startProtocolSprint(shell) {
+    var rounds = [
+      { protocol: 'HTTPS', mitre: 'T1071.001' },
+      { protocol: 'DNS', mitre: 'T1071.004' },
+      { protocol: 'SMB', mitre: 'T1021.002' },
+      { protocol: 'WEBSOCKET', mitre: 'T1105' }
+    ];
+    runtime.skill = {
+      id: 'protocolSprint',
+      rounds: rounds,
+      idx: 0,
+      misses: 0,
+      startMs: Date.now()
+    };
+    shell.appendOut('[SKILL] Protocol Sprint started. Type protocol for each MITRE hint.');
+    shell.appendOut('[SKILL] Round 1/' + rounds.length + ' hint=' + rounds[0].mitre);
   }
 
-  function startDecisionTree(shell) {
-    var gained = 600;
-    shell.appendOut('[TREE] Decision tree complete — optimal playbook path recorded.');
-    shell.submitScore('decisionTree', gained);
+  function startDecodeAccuracy(shell) {
+    var rounds = [
+      { encoded: 'd2hvYW1p', decoded: 'whoami' },
+      { encoded: 'aXBjb25maWcgL2FsbA==', decoded: 'ipconfig /all' },
+      { encoded: 'bmV0IHVzZXI=', decoded: 'net user' },
+      { encoded: 'Y21kIC9jIGRpciA=', decoded: 'cmd /c dir' }
+    ];
+    runtime.skill = {
+      id: 'decodeAccuracy',
+      rounds: rounds,
+      idx: 0,
+      correct: 0,
+      startMs: Date.now()
+    };
+    shell.appendOut('[SKILL] Decode Accuracy started. Type exact decoded command.');
+    shell.appendOut('[SKILL] Encoded 1/' + rounds.length + ': ' + rounds[0].encoded);
+  }
+
+  function startBeaconTracing(shell) {
+    runtime.skill = {
+      id: 'beaconTracing',
+      expected: ['185.141.26.43', '103.77.192.88', '172.20.44.91', '45.155.205.17'],
+      idx: 0,
+      misses: 0,
+      startMs: Date.now()
+    };
+    shell.appendOut('[SKILL] Beacon Tracing started. Type IPs in chronological order.');
+    shell.appendOut('[SKILL] Enter IP 1/4');
+  }
+
+  function finishProtocolSprint(shell, skill) {
+    var elapsed = Math.max(1, Math.floor((Date.now() - skill.startMs) / 1000));
+    var scoreValue = Math.max(120, 1000 - elapsed * 24 - skill.misses * 55);
+    shell.submitScore('protocolSprint', scoreValue);
+    shell.appendOut('[SKILL] Protocol Sprint score: ' + scoreValue + ' | time ' + elapsed + 's | misses ' + skill.misses);
+    runtime.skill = null;
+  }
+
+  function finishDecodeAccuracy(shell, skill) {
+    var elapsed = Math.max(1, Math.floor((Date.now() - skill.startMs) / 1000));
+    var accuracy = skill.correct / skill.rounds.length;
+    var scoreValue = Math.max(100, Math.floor(accuracy * 900) - elapsed * 12);
+    shell.submitScore('decodeAccuracy', scoreValue);
+    shell.appendOut('[SKILL] Decode Accuracy score: ' + scoreValue + ' | accuracy ' + Math.round(accuracy * 100) + '%');
+    runtime.skill = null;
+  }
+
+  function finishBeaconTracing(shell, skill) {
+    var elapsed = Math.max(1, Math.floor((Date.now() - skill.startMs) / 1000));
+    var scoreValue = Math.max(140, 980 - elapsed * 30 - skill.misses * 70);
+    shell.submitScore('beaconTracing', scoreValue);
+    shell.appendOut('[SKILL] Beacon Tracing score: ' + scoreValue + ' | time ' + elapsed + 's');
+    runtime.skill = null;
+  }
+
+  function handleSkillInput(shell, raw) {
+    var value = String(raw || '').trim();
+    var skill = runtime.skill;
+    if (!skill) return;
+
+    if (skill.id === 'protocolSprint') {
+      var expectedProtocol = skill.rounds[skill.idx].protocol;
+      if (String(value).toUpperCase() === expectedProtocol) {
+        skill.idx += 1;
+        shell.appendOut('[SKILL] Correct.');
+      } else {
+        skill.misses += 1;
+        shell.appendOut('[SKILL] Wrong. Expected transport class for hint.');
+      }
+      if (skill.idx >= skill.rounds.length) finishProtocolSprint(shell, skill);
+      else shell.appendOut('[SKILL] Round ' + (skill.idx + 1) + '/' + skill.rounds.length + ' hint=' + skill.rounds[skill.idx].mitre);
+      return;
+    }
+
+    if (skill.id === 'decodeAccuracy') {
+      var expectedDecode = normalizeCmd(skill.rounds[skill.idx].decoded);
+      if (normalizeCmd(value) === expectedDecode) {
+        skill.correct += 1;
+        shell.appendOut('[SKILL] Correct decode.');
+      } else {
+        shell.appendOut('[SKILL] Incorrect decode.');
+      }
+      skill.idx += 1;
+      if (skill.idx >= skill.rounds.length) finishDecodeAccuracy(shell, skill);
+      else shell.appendOut('[SKILL] Encoded ' + (skill.idx + 1) + '/' + skill.rounds.length + ': ' + skill.rounds[skill.idx].encoded);
+      return;
+    }
+
+    if (skill.id === 'beaconTracing') {
+      var expectedIp = skill.expected[skill.idx];
+      if (value === expectedIp) {
+        skill.idx += 1;
+        shell.appendOut('[SKILL] Correct IP.');
+      } else {
+        skill.misses += 1;
+        shell.appendOut('[SKILL] Incorrect order.');
+      }
+      if (skill.idx >= skill.expected.length) finishBeaconTracing(shell, skill);
+      else shell.appendOut('[SKILL] Enter IP ' + (skill.idx + 1) + '/' + skill.expected.length);
+    }
+  }
+
+  function setLevelText(shell, level) {
+    if (level === 5) {
+      shell.setTaskText('Debrief phase: click RUN DEBRIEF or type run debrief.');
+      return;
+    }
+    shell.setTaskText('Select C2 protocol and decode the command payload for level ' + level + '.');
   }
 
   var config = {
     gameId: GAME_ID,
     title: 'INTERROGATION ROOM',
     achievementId: 'intercept_master',
-    leaderboardChallenge: 'speedTrial',
-    engine: { bg: 0x0a0804, physics: true },
-    moveSpeed: 2.4,
+    leaderboardChallenge: 'protocolSprint',
+    engine: { bg: 0x081226, physics: true },
+    moveSpeed: 2.35,
     buildScene: buildScene,
     levels: {
-    1: {
-      name: 'C2 vs HTTPS',
-      hint: 'Separate beacon traffic from web noise',
-      action: 'DECODE B64',
-      taskSequence: [
-        { action: 'DECODE B64', hint: 'Context pass — run DECODE B64 on incoming telemetry' },
-        { action: 'DECODE B64', hint: 'Separate beacon traffic from web noise' }
-      ],
-      tasks: [{
-        id: 'L1_main',
-        hint: 'Separate beacon traffic from web noise',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] DECODE B64 — Separate beacon traffic from web noise',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 1 (5 paths)',
-        desc: 'Your Command and Control communication patterns choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_1', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_1', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_1', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_1', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_1', label: 'Isolate affected segment conservatively' }
+      1: {
+        name: 'Beacon Bootstrap',
+        hint: 'Classify C2 protocol and decode tasking.',
+        timeLimit: 280,
+        tasks: [
+          {
+            id: 'l1_protocol',
+            hint: 'Select correct protocol based on telemetry.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateProtocolTask(1, shell); },
+            output: '[TASK] Protocol validation complete.'
+          },
+          {
+            id: 'l1_command',
+            hint: 'Type decoded command from base64 block.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateCommandTask(1, shell); },
+            output: '[TASK] Command validation complete.'
+          }
+        ],
+        branch: {
+          title: 'Escalation Path',
+          desc: 'Choose investigation emphasis after first intercept.',
+          options: [
+            { id: 'intercept_l1_contain', label: 'Push immediate host containment.' },
+            { id: 'intercept_l1_hunt', label: 'Run infra-wide hunt before isolation.' },
+            { id: 'intercept_l1_deception', label: 'Deploy decoy endpoint for callback.' },
+            { id: 'intercept_l1_chain', label: 'Prioritize full kill-chain reconstruction.' },
+            { id: 'intercept_l1_partner', label: 'Share indicator package with partner SOC.' }
+          ]
+        }
+      },
+      2: {
+        name: 'DNS Tunneling Pivot',
+        hint: 'Identify DNS C2 and decode account enumeration tasking.',
+        timeLimit: 310,
+        tasks: [
+          {
+            id: 'l2_protocol',
+            hint: 'Select protocol for tunneling beacon.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateProtocolTask(2, shell); },
+            output: '[TASK] Protocol validation complete.'
+          },
+          {
+            id: 'l2_command',
+            hint: 'Decode and submit operator command.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateCommandTask(2, shell); },
+            output: '[TASK] Command validation complete.'
+          }
+        ],
+        branch: {
+          title: 'Collection Strategy',
+          desc: 'Choose signal collection posture for DNS beaconing.',
+          options: [
+            { id: 'intercept_l2_block', label: 'Block sinkholed domains now.' },
+            { id: 'intercept_l2_monitor', label: 'Monitor query entropy for more hosts.' },
+            { id: 'intercept_l2_trace', label: 'Trace resolver path to edge gateway.' },
+            { id: 'intercept_l2_sink', label: 'Redirect C2 TXT responses to sink host.' },
+            { id: 'intercept_l2_delay', label: 'Delay containment to collect campaign graph.' }
+          ]
+        }
+      },
+      3: {
+        name: 'SMB Lateral Relay',
+        hint: 'Detect SMB relay protocol and decode share access command.',
+        timeLimit: 340,
+        tasks: [
+          {
+            id: 'l3_protocol',
+            hint: 'Identify transport protocol for lateral movement.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateProtocolTask(3, shell); },
+            output: '[TASK] Protocol validation complete.'
+          },
+          {
+            id: 'l3_command',
+            hint: 'Submit decoded lateral movement command.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateCommandTask(3, shell); },
+            output: '[TASK] Command validation complete.'
+          }
+        ],
+        branch: {
+          title: 'Lateral Movement Response',
+          desc: 'Pick the next action after SMB relay confirmation.',
+          options: [
+            { id: 'intercept_l3_reset', label: 'Reset privileged credentials immediately.' },
+            { id: 'intercept_l3_segment', label: 'Segment admin shares by subnet.' },
+            { id: 'intercept_l3_hunt', label: 'Hunt for service-creation artifacts first.' },
+            { id: 'intercept_l3_ticket', label: 'Invalidate Kerberos tickets globally.' },
+            { id: 'intercept_l3_forensic', label: 'Preserve forensic image before cleaning.' }
+          ]
+        }
+      },
+      4: {
+        name: 'WebSocket Fallback',
+        hint: 'Resolve websocket fallback and decode powershell bootstrap.',
+        timeLimit: 370,
+        tasks: [
+          {
+            id: 'l4_protocol',
+            hint: 'Identify fallback transport class.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateProtocolTask(4, shell); },
+            output: '[TASK] Protocol validation complete.'
+          },
+          {
+            id: 'l4_command',
+            hint: 'Decode and submit bootstrap command.',
+            errorType: 'wrong_command',
+            validate: function (cmd, shell) { return validateCommandTask(4, shell); },
+            output: '[TASK] Command validation complete.'
+          }
         ]
-      }
-    }
-    2: {
-      name: 'Protocol Decode',
-      hint: 'Decode base64 command batch',
-      action: 'EXTRACT IP', timeLimit: 300,
-      taskSequence: [
-        { action: 'EXTRACT IP', hint: 'Context pass — run EXTRACT IP on incoming telemetry' },
-        { action: 'EXTRACT IP', hint: 'Decode base64 command batch' }
-      ],
-      tasks: [{
-        id: 'L2_main',
-        hint: 'Decode base64 command batch',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] EXTRACT IP — Decode base64 command batch',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 2 (5 paths)',
-        desc: 'Your Command and Control communication patterns choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_2', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_2', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_2', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_2', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_2', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    3: {
-      name: 'IOC Extraction',
-      hint: 'Pull domains and hashes from transcript',
-      action: 'TAG HASH', timeLimit: 360,
-      taskSequence: [
-        { action: 'SUBMIT IOC', hint: 'Pre-check — validate environment baseline' },
-        { action: 'TAG HASH', hint: 'Context pass — run TAG HASH on incoming telemetry' },
-        { action: 'TAG HASH', hint: 'Pull domains and hashes from transcript' }
-      ],
-      tasks: [{
-        id: 'L3_main',
-        hint: 'Pull domains and hashes from transcript',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] TAG HASH — Pull domains and hashes from transcript',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }],
-      branch: {
-        title: 'Story branch — Level 3 (5 paths)',
-        desc: 'Your Command and Control communication patterns choices shape the next phase. Fifteen total branches across levels 1–3.',
-        options: [
-          { id: 'branch_speed_3', label: 'Act immediately — prioritize containment speed' },
-          { id: 'branch_evidence_3', label: 'Investigate first — preserve evidence and context' },
-          { id: 'branch_escalate_3', label: 'Escalate to tier-2 before acting' },
-          { id: 'branch_document_3', label: 'Document timeline while monitoring' },
-          { id: 'branch_isolate_3', label: 'Isolate affected segment conservatively' }
-        ]
-      }
-    }
-    4: {
-      name: 'Framework ID',
-      hint: 'Attribute malware family by behavior',
-      action: 'UNLOCK OMEGA', timeLimit: 420,
-      taskSequence: [
-        { action: 'DECODE B64', hint: 'Pre-check — validate environment baseline' },
-        { action: 'UNLOCK OMEGA', hint: 'Context pass — run UNLOCK OMEGA on incoming telemetry' },
-        { action: 'UNLOCK OMEGA', hint: 'Attribute malware family by behavior' }
-      ],
-      tasks: [{
-        id: 'L4_main',
-        hint: 'Attribute malware family by behavior',
-        errorType: 'wrong_command',
-        validate: function () { return true; },
-        output: '[OK] UNLOCK OMEGA — Attribute malware family by behavior',
-        onSuccess: function (shell) { shell.score += 100; if (shell.updateScore) shell.updateScore(); }
-      }]
-    }
-    5: { name: 'Threat Intel Brief', epilogue: true }
+      },
+      5: { name: 'Intercept Debrief', epilogue: true }
     },
     skills: [
-      { id: 'speedTrial', name: 'Speed Trial', unlockAfter: 1, desc: 'Chain operator actions quickly', start: startSpeedTrial },
-      { id: 'accuracyGauntlet', name: 'Accuracy Gauntlet', unlockAfter: 2, desc: 'Zero-error action sequence', start: startAccuracyGauntlet },
-      { id: 'decisionTree', name: 'Decision Tree', unlockAfter: 3, desc: 'Pick optimal playbook steps', start: startDecisionTree }
+      {
+        id: 'protocolSprint',
+        name: 'Protocol Sprint',
+        unlockAfter: 1,
+        desc: 'Rapidly map MITRE hints to C2 protocol classes.',
+        start: startProtocolSprint
+      },
+      {
+        id: 'decodeAccuracy',
+        name: 'Decode Accuracy',
+        unlockAfter: 2,
+        desc: 'Decode base64 C2 tasks with high accuracy.',
+        start: startDecodeAccuracy
+      },
+      {
+        id: 'beaconTracing',
+        name: 'Beacon Tracing',
+        unlockAfter: 3,
+        desc: 'Reconstruct beacon IP sequence under time pressure.',
+        start: startBeaconTracing
+      }
     ],
-    onLevelStart: function (n, shell) {
-      shell.levelState.taskIdx = 0;
-      var def = shell.config.levels[n];
-      var seq = def.taskSequence || [{ hint: def.hint }];
-      shell.setTaskText('Step 1/' + seq.length + ': ' + (seq[0].hint || def.hint));
-      score += n * 10;
-      updateScoreDisplay();
-      narrateLevel(n, shell);
+    onLevelStart: function (level, shell) {
+      var extras = ensureExtras(shell);
+      extras.selectedProtocol = '';
+      extras.decodedCommand = '';
+      extras.protocolVerified = false;
+      extras.commandVerified = false;
+      extras.actions = [];
+      runtime.levelStartMs = Date.now();
+      setLevelText(shell, level);
+      addPoints(shell, 12 + level * 4, 'level start');
     },
-    onLevelComplete: function (lv, shell) {
-      var b = STORY_BEATS[lv];
-      if (b) shell.appendOut('[NARRATIVE] ' + b.closing);
+    onLevelComplete: function (level, shell) {
+      if (level <= 4) shell.appendOut('[REPORT] Intercept case ' + level + ' closed.');
+      if (level === 4) shell.appendOut('[REPORT] Four-channel C2 decoding package complete.');
     }
   };
 
-  config.onTick = function (dt, shell) {
-    meshes.forEach(function (m) {
-      if (m.userData && m.userData.physicsBody && m.userData.physicsBody.mass > 0) return;
-      if (m.userData && m.userData.particle) {
-        m.position.y += Math.sin(Date.now() * 0.002 + m.position.x) * dt * 0.3;
+  config.onTick = function (dt) {
+    var i;
+    pulse += dt * 2.1;
+    for (i = 0; i < meshes.length; i++) {
+      var mesh = meshes[i];
+      if (!mesh || !mesh.userData) continue;
+      if (mesh.userData.physicsBody && mesh.userData.physicsBody.mass > 0) continue;
+      if (mesh.userData.kind === 'node') {
+        mesh.rotation.y += dt * 0.3;
+        mesh.position.y += Math.sin(pulse + i * 0.4) * dt * 0.3;
       }
-    });
+      if (mesh.userData.kind === 'ring') {
+        mesh.rotation.x += dt * 0.2;
+        mesh.rotation.z += dt * 0.12;
+      }
+      if (mesh.userData.kind === 'core') {
+        mesh.material.emissiveIntensity = 0.2 + Math.abs(Math.sin(pulse)) * 0.24;
+      }
+    }
   };
 
   document.addEventListener('DOMContentLoaded', function () {
+    var shell;
+    var taskText = document.getElementById('task-text');
+    var actionLog = document.getElementById('action-log');
+
     if (!HabibiProgression.isGameUnlocked(GAME_ID) && GAME_ID !== 'the_terminal') {
-      var st = HabibiProgression.load(GAME_ID);
-      if (!st.unlocked) {
-        document.getElementById('task-text').textContent = 'Module locked — complete previous game epilogue first.';
+      var state = HabibiProgression.load(GAME_ID);
+      if (!state.unlocked) {
+        if (taskText) taskText.textContent = 'Module locked — complete previous game epilogue first.';
         return;
       }
     }
-    var shell = new HabibiGameShell(config);
+
+    shell = new HabibiGameShell(config);
     shell.score = 0;
     shell.updateScore = updateScoreDisplay;
-    shell.appendOut = function (t) {
-      var el = document.getElementById('action-log');
-      el.textContent += t + '\n';
-      el.scrollTop = el.scrollHeight;
+    shell.appendOut = function (text) {
+      if (!actionLog) return;
+      actionLog.textContent += text + '\n';
+      actionLog.scrollTop = actionLog.scrollHeight;
     };
-    shell.setTaskText = function (t) { document.getElementById('task-text').textContent = t; };
+    shell.setTaskText = function (text) {
+      if (taskText) taskText.textContent = text;
+    };
+
+    shell.onCommand = function (cmd, activeShell) {
+      var lowered = normalizeCmd(cmd);
+      if (lowered === 'help') {
+        activeShell.appendOut('[CMD] Select protocol button, then type decoded command.');
+        activeShell.appendOut('[CMD] Skill mode uses direct text inputs.');
+        return;
+      }
+      if (lowered === 'status') {
+        var extras = ensureExtras(activeShell);
+        activeShell.appendOut('[STATUS] protocol=' + (extras.selectedProtocol || '(none)') + ' verified=' + extras.protocolVerified);
+        activeShell.appendOut('[STATUS] command=' + (extras.decodedCommand || '(none)') + ' verified=' + extras.commandVerified);
+        return;
+      }
+      if (runtime.skill) {
+        handleSkillInput(activeShell, cmd);
+        return;
+      }
+      handleTypedCommand(activeShell, cmd);
+    };
+
     shell.init();
+    setupForm(shell);
+    revealInputAndButtons();
+    updateScoreDisplay();
   });
 })();
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
-  /* depth */
