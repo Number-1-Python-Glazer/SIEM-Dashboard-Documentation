@@ -81,14 +81,25 @@
     #boot {
       position: fixed; inset: 0; z-index: 100; background: #000;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.4s ease-out; cursor: pointer;
+      gap: 18px; transition: opacity 0.4s ease-out; cursor: pointer;
     }
     #boot.hide { opacity: 0; pointer-events: none; visibility: hidden; }
     #boot span {
       font: 600 11px/1 'Consolas', 'Courier New', monospace; letter-spacing: 8px;
       color: #c4b5fd; text-transform: uppercase;
     }
-    #boot small { margin-top: 12px; font: 10px monospace; color: #6b21a8; letter-spacing: 2px; }
+    #boot small { font: 10px monospace; color: #6b21a8; letter-spacing: 2px; }
+    #boot-enter {
+      margin-top: 32px; padding: 10px 28px;
+      border: 1px solid rgba(167,139,250,0.5); border-radius: 3px;
+      font: 600 10px/1 'Consolas', monospace; letter-spacing: 4px; color: #a78bfa;
+      text-transform: uppercase;
+      animation: boot-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes boot-pulse {
+      0%, 100% { opacity: 0.4; border-color: rgba(167,139,250,0.25); }
+      50% { opacity: 1; border-color: rgba(167,139,250,0.9); }
+    }
     #bar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 10;
       padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -572,7 +583,7 @@
   <link rel="stylesheet" href="../experience-modules/shared/dio-guide.css" />
 </head>
 <body>
-  <div id="boot"><span>Meridian-7 observation deck</span><small>initialising viewport · v13.3.0-camdrift</small></div>
+  <div id="boot"><span>Meridian-7 observation deck</span><small>Operation HABIBI-SIEM · Observation Deck</small><div id="boot-enter">[ Click to Enter ]</div></div>
   <div id="bar">
     <h1>SIEM Dashboard · Observation Deck</h1>
     <p>Click a module for brief · Tab tour · Shift+click compare · ?focus=slug deep link</p>
@@ -707,37 +718,37 @@
   </div>
   <div id="stats"></div>
   <nav id="deck-experience-orbit" aria-label="Experience hub">
-    <a class="deck-exp-tile" href="../terminal.html"><h3>Terminal</h3><p>SOC shell boot sequence</p></a>
-    <a class="deck-exp-tile" href="../breach.html"><h3>Breach</h3><p>Red-team containment sim</p></a>
-    <a class="deck-exp-tile" href="../network.html"><h3>Ghost Net</h3><p>45-node threat graph</p></a>
-    <a class="deck-exp-tile" href="../cipher.html"><h3>Cipher</h3><p>Crypto puzzle room</p></a>
-    <a class="deck-exp-tile" href="../sim.html"><h3>Simulation</h3><p>Incident timeline replay</p></a>
-    <a class="deck-exp-tile" href="../intercept.html"><h3>Interrogation</h3><p>Signal decode chamber</p></a>
-    <a class="deck-exp-tile" href="../forge.html"><h3>Forge</h3><p>Rule crafting workshop</p></a>
-    <a class="deck-exp-tile" href="../archive.html"><h3>Archive</h3><p>Deep log vault dive</p></a>
-    <a class="deck-exp-tile" href="../heist.html"><h3>Heist</h3><p>Stealth data extraction</p></a>
-    <a class="deck-exp-tile" href="../cartography.html"><h3>Cartography</h3><p>Threat terrain map</p></a>
-    <a class="deck-exp-tile" href="../lab.html"><h3>Lab</h3><p>Detection experiment bay</p></a>
-    <a class="deck-exp-tile" href="../memorial.html"><h3>Memorial</h3><p>Incident remembrance wall</p></a>
-    <a class="deck-exp-tile" href="../resonance.html"><h3>Resonance</h3><p>6-channel alert sonics</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game1-terminal/index.html"><h3>Terminal</h3><p>SOC shell boot sequence</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game2-breach/index.html"><h3>Breach</h3><p>Red-team containment sim</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game3-network/index.html"><h3>Ghost Net</h3><p>45-node threat graph</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game4-cipher/index.html"><h3>Cipher</h3><p>Crypto puzzle room</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game5-simulation/index.html"><h3>Simulation</h3><p>Incident timeline replay</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game6-intercept/index.html"><h3>Interrogation</h3><p>Signal decode chamber</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game7-forge/index.html"><h3>Forge</h3><p>Rule crafting workshop</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game8-archive/index.html"><h3>Archive</h3><p>Deep log vault dive</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game9-heist/index.html"><h3>Heist</h3><p>Stealth data extraction</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game11-cartography/index.html"><h3>Cartography</h3><p>Threat terrain map</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game10-lab/index.html"><h3>Lab</h3><p>Detection experiment bay</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game12-memorial/index.html"><h3>Memorial</h3><p>Incident remembrance wall</p></a>
+    <a class="deck-exp-tile" href="../experience-modules/game13-resonance/index.html"><h3>Resonance</h3><p>6-channel alert sonics</p></a>
   </nav>
   <aside id="deck-experience-hub" aria-label="Experience hub">
     <button type="button" id="deck-experience-hub-toggle" aria-expanded="false" aria-controls="deck-experience-hub-panel">Experiences · 13</button>
     <div id="deck-experience-hub-panel" role="region" aria-label="All deck experiences">
       <h2>Deck experiences</h2>
-      <a class="deck-exp-hub-link" href="../terminal.html"><strong>The Terminal</strong><span>SOC shell boot sequence — command-line triage and virtual log filesystem.</span></a>
-      <a class="deck-exp-hub-link" href="../breach.html"><strong>The Breach</strong><span>Red-team containment sim — isolate nodes and stop lateral movement.</span></a>
-      <a class="deck-exp-hub-link" href="../network.html"><strong>The Ghost Network</strong><span>45-node threat graph with packet capture and live events.</span></a>
-      <a class="deck-exp-hub-link" href="../cipher.html"><strong>The Cipher</strong><span>Cryptographic puzzle room — decode signals and unlock briefs.</span></a>
-      <a class="deck-exp-hub-link" href="../sim.html"><strong>The Simulation</strong><span>Incident timeline replay — scrub detections and analyst actions.</span></a>
-      <a class="deck-exp-hub-link" href="../intercept.html"><strong>The Interrogation Room</strong><span>Signal decode chamber — interrogate traffic and extract IOCs.</span></a>
-      <a class="deck-exp-hub-link" href="../forge.html"><strong>The Forge</strong><span>Detection rule workshop — build and test STRIDE-aligned rules.</span></a>
-      <a class="deck-exp-hub-link" href="../archive.html"><strong>The Deep Archive</strong><span>Three-dimensional log vault — navigate retained evidence spatially.</span></a>
-      <a class="deck-exp-hub-link" href="../heist.html"><strong>The Heist</strong><span>Stealth data extraction — evade guards across segmented zones.</span></a>
-      <a class="deck-exp-hub-link" href="../cartography.html"><strong>The Cartography</strong><span>WebGL threat globe — plot actor arcs and attack paths.</span></a>
-      <a class="deck-exp-hub-link" href="../lab.html"><strong>The Lab</strong><span>Detection experiment bay — tune rules against synthetic campaigns.</span></a>
-      <a class="deck-exp-hub-link" href="../memorial.html"><strong>The Memorial</strong><span>Incident remembrance wall — major breaches and lessons learned.</span></a>
-      <a class="deck-exp-hub-link" href="../resonance.html"><strong>The Resonance</strong><span>Six-channel alert sonification — mix ingest, rules, and threat feeds.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game1-terminal/index.html"><strong>The Terminal</strong><span>SOC shell boot sequence — command-line triage and virtual log filesystem.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game2-breach/index.html"><strong>The Breach</strong><span>Red-team containment sim — isolate nodes and stop lateral movement.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game3-network/index.html"><strong>The Ghost Network</strong><span>45-node threat graph with packet capture and live events.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game4-cipher/index.html"><strong>The Cipher</strong><span>Cryptographic puzzle room — decode signals and unlock briefs.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game5-simulation/index.html"><strong>The Simulation</strong><span>Incident timeline replay — scrub detections and analyst actions.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game6-intercept/index.html"><strong>The Interrogation Room</strong><span>Signal decode chamber — interrogate traffic and extract IOCs.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game7-forge/index.html"><strong>The Forge</strong><span>Detection rule workshop — build and test STRIDE-aligned rules.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game8-archive/index.html"><strong>The Deep Archive</strong><span>Three-dimensional log vault — navigate retained evidence spatially.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game9-heist/index.html"><strong>The Heist</strong><span>Stealth data extraction — evade guards across segmented zones.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game11-cartography/index.html"><strong>The Cartography</strong><span>WebGL threat globe — plot actor arcs and attack paths.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game10-lab/index.html"><strong>The Lab</strong><span>Detection experiment bay — tune rules against synthetic campaigns.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game12-memorial/index.html"><strong>The Memorial</strong><span>Incident remembrance wall — major breaches and lessons learned.</span></a>
+      <a class="deck-exp-hub-link" href="../experience-modules/game13-resonance/index.html"><strong>The Resonance</strong><span>Six-channel alert sonification — mix ingest, rules, and threat feeds.</span></a>
     </div>
   </aside>
   <div id="deck-nav-root"></div>
@@ -801,6 +812,7 @@
   let trailPulse = 0;
   let tourStep = -1;
   let currentRole = 'manager';
+  let wormholeIntroDone = false;
 
   const TRAIL_PATH = ['Validation', 'DetectionEngine', 'Alert Manager', 'SOAR Console'];
   const TOUR_STEPS = [
