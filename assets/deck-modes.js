@@ -484,7 +484,7 @@
   function updateChainPanel() {
     if (!ui.chainText) return;
     if (!state.chain.length) {
-      ui.chainText.textContent = 'Click modules in order to build a custom attack path.';
+      ui.chainText.textContent = 'Click modules to build a custom attack path.';
       return;
     }
     const lines = state.chain.map((lbl, i) => {
