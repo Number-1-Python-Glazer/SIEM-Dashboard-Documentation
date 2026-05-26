@@ -32,7 +32,9 @@
       var raw = localStorage.getItem(PREFIX + gameId);
       if (!raw) return defaultState(gameId);
       var data = JSON.parse(raw);
-      return Object.assign(defaultState(gameId), data);
+      var merged = Object.assign(defaultState(gameId), data);
+      merged.unlocked = true; // always unlocked — no gates
+      return merged;
     } catch (_) {
       return defaultState(gameId);
     }

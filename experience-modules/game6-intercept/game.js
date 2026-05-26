@@ -672,14 +672,6 @@
     var taskText = document.getElementById('task-text');
     var actionLog = document.getElementById('action-log');
 
-    if (!HabibiProgression.isGameUnlocked(GAME_ID) && GAME_ID !== 'the_terminal') {
-      var state = HabibiProgression.load(GAME_ID);
-      if (!state.unlocked) {
-        if (taskText) taskText.textContent = 'Module locked — complete previous game epilogue first.';
-        return;
-      }
-    }
-
     shell = new HabibiGameShell(config);
     shell.score = 0;
     shell.updateScore = updateScoreDisplay;

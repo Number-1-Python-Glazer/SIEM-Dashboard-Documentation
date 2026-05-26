@@ -372,14 +372,6 @@
   };
 
   document.addEventListener('DOMContentLoaded', function () {
-    if (!HabibiProgression.isGameUnlocked(GAME_ID) && GAME_ID !== 'the_terminal') {
-      var st = HabibiProgression.load(GAME_ID);
-      if (!st.unlocked) {
-        document.getElementById('task-text').textContent = 'Module locked — complete previous game epilogue first.';
-        return;
-      }
-    }
-
     var shell = new HabibiGameShell(config);
     shell.score = 0;
     shell.updateScore = updateScoreDisplay;
